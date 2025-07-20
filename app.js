@@ -65,7 +65,7 @@ function diasRestantes(fechaCaducidad) {
 
 // --- Precarga de verduras si la base está vacía ---
 const VERDURAS_PREDEFINIDAS = [
-  "achicoria", "apio", "repollo", "zapallo italiano", "acelga cruda", "espinaca cruda", "lechuga", "pepino ensalada", "rabanito", "tomate", "acelga cocida", "alcachofa", "betarraga", "cebolla", "coliflor", "brócoli", "kale", "espárragos", "espinaca cocida", "champiñones", "porotos verdes", "zanahoria", "zapallito italiano cocido", "palmitos", "palta"
+  "achicoria", "apio", "repollo", "zapallo italiano", "acelga cruda", "espinaca cruda", "lechuga", "pepino ensalada", "rabanito", "tomate", "acelga cocida", "alcachofa", "betarraga", "cebolla", "coliflor", "brócoli", "kale", "espárragos", "espinaca cocida", "champiñones", "porotos verdes", "zanahoria", "zapallito italiano cocido", "palmitos", "palta", "papas"
 ];
 
 function precargarVerduras() {
@@ -170,7 +170,7 @@ function migrarCarnesAProteinas() {
 }
 
 // Precarga de proteinas si la base está vacía de ellas
-const PROTEINAS_PREDEFINIDAS = ["carne", "pollo", "cerdo", "pescado", "atún"];
+const PROTEINAS_PREDEFINIDAS = ["carne", "pollo", "cerdo", "pescado", "atún", "huevo"];
 function precargarProteinas() {
   return obtenerProductos().then(productos => {
     const yaExisten = productos.filter(p => p.categoria === "Proteinas").map(p => p.nombre);
@@ -220,7 +220,7 @@ function migrarBebidasALegumbres() {
   });
 }
 // Precarga de legumbres si la base está vacía de ellas
-const LEGUMBRES_PREDEFINIDAS = ["porotos negros", "lentejas", "arroz"];
+const LEGUMBRES_PREDEFINIDAS = ["porotos negros", "lentejas", "arroz", "fideos"];
 function precargarLegumbres() {
   return obtenerProductos().then(productos => {
     const yaExisten = productos.filter(p => p.categoria === "Legumbres").map(p => p.nombre);
@@ -270,7 +270,421 @@ const PLATOS = [
   }
 ];
 
+// 10 menús/platos principales con ensalada incluida
+const MENUS = [
+  {
+    nombre: "Almuerzo clásico",
+    categorias: ["carne", "guarnicion", "frutas"],
+    ensalada: true,
+    pasos: [
+      "Asa la carne de vacuno/lomo liso/filete a la plancha o hiérvela (15-20 min).",
+      "Cocina la guarnición (arroz, fideos, papas, etc.) en agua con sal (15-20 min).",
+      "Prepara una ensalada clásica con los ingredientes disponibles. Aliña con aceite, sal y vinagre.",
+      "Sirve todo junto y acompaña con fruta fresca."
+    ]
+  },
+  {
+    nombre: "Pollo con papas y ensalada",
+    categorias: ["pollo", "papas", "frutas"],
+    ensalada: true,
+    pasos: [
+      "Asa el pollo al horno o a la plancha (20-30 min).",
+      "Cocina las papas en agua con sal (20 min).",
+      "Prepara una ensalada clásica con los ingredientes disponibles. Aliña con aceite y sal.",
+      "Sirve todo junto y acompaña con fruta fresca."
+    ]
+  },
+  {
+    nombre: "Pescado con quinoa y ensalada",
+    categorias: ["pescado", "quinoa", "frutas"],
+    ensalada: true,
+    pasos: [
+      "Cocina el pescado a la plancha o al vapor (10-15 min).",
+      "Cocina la quinoa en agua con sal (15 min).",
+      "Prepara una ensalada clásica con los ingredientes disponibles. Aliña con aceite y sal.",
+      "Sirve todo junto y acompaña con fruta fresca."
+    ]
+  },
+  {
+    nombre: "Legumbres con mote y ensalada",
+    categorias: ["legumbres", "mote", "frutas"],
+    ensalada: true,
+    pasos: [
+      "Cocina las legumbres y el mote en agua con sal (30-40 min).",
+      "Prepara una ensalada clásica con los ingredientes disponibles. Aliña con aceite y sal.",
+      "Sirve todo junto y acompaña con fruta fresca."
+    ]
+  },
+  {
+    nombre: "Cerdo con cuscús y ensalada",
+    categorias: ["cerdo", "cuscús", "frutas"],
+    ensalada: true,
+    pasos: [
+      "Asa el cerdo a la plancha (15 min).",
+      "Prepara el cuscús según instrucciones del envase.",
+      "Prepara una ensalada clásica con los ingredientes disponibles. Aliña con aceite y sal.",
+      "Sirve todo junto y acompaña con fruta fresca."
+    ]
+  },
+  {
+    nombre: "Huevo duro con papas y ensalada",
+    categorias: ["huevo", "papas", "frutas"],
+    ensalada: true,
+    pasos: [
+      "Cocina el huevo duro (10 min).",
+      "Cocina las papas en agua con sal (20 min).",
+      "Prepara una ensalada clásica con los ingredientes disponibles. Aliña con aceite y sal.",
+      "Sirve todo junto y acompaña con fruta fresca."
+    ]
+  },
+  {
+    nombre: "Atún con fideos y ensalada",
+    categorias: ["atún", "fideos", "frutas"],
+    ensalada: true,
+    pasos: [
+      "Cocina los fideos en agua con sal (10 min).",
+      "Sirve el atún en conserva.",
+      "Prepara una ensalada clásica con los ingredientes disponibles. Aliña con aceite y sal.",
+      "Sirve todo junto y acompaña con fruta fresca."
+    ]
+  },
+  {
+    nombre: "Tortilla de verduras con ensalada",
+    categorias: ["huevo", "frutas"],
+    ensalada: true,
+    pasos: [
+      "Bate los huevos y mezcla con las verduras seleccionadas picadas.",
+      "Cocina la tortilla en sartén antiadherente (5-7 min por lado).",
+      "Prepara una ensalada clásica con los ingredientes disponibles. Aliña con aceite y sal.",
+      "Sirve la tortilla con la ensalada y fruta fresca."
+    ]
+  },
+  {
+    nombre: "Guiso de legumbres y verduras",
+    categorias: ["legumbres", "frutas"],
+    ensalada: true,
+    pasos: [
+      "Cocina las legumbres con las verduras seleccionadas en agua con sal (40 min).",
+      "Prepara una ensalada clásica con los ingredientes disponibles. Aliña con aceite y sal.",
+      "Sirve el guiso acompañado de la ensalada y fruta fresca."
+    ]
+  },
+  {
+    nombre: "Pescado al horno con papas y ensalada",
+    categorias: ["pescado", "papas", "frutas"],
+    ensalada: true,
+    pasos: [
+      "Hornea el pescado con un poco de aceite, sal y limón (20 min).",
+      "Cocina las papas en agua con sal (20 min).",
+      "Prepara una ensalada clásica con los ingredientes disponibles. Aliña con aceite y sal.",
+      "Sirve todo junto y acompaña con fruta fresca."
+    ]
+  }
+];
+
 let modoMenu = false;
+
+// Filtro de recetas
+let filtroRecetas = 'todas'; // 'todas', 'completas', 'faltantes'
+
+// Definir recetas reales y platos principales
+const RECETAS = [
+  {
+    nombre: "Ensalada de tomate y cebolla",
+    categorias: ["verduras"],
+    productos: ["tomate", "cebolla"],
+    extras: ["aceite de oliva", "sal", "vinagre"],
+    pasos: [
+      "Corta el tomate y la cebolla en rodajas.",
+      "Mezcla en un bol, añade aceite, sal y vinagre."
+    ]
+  },
+  {
+    nombre: "Ensalada de palta y tomate",
+    categorias: ["verduras"],
+    productos: ["palta", "tomate", "cebolla"],
+    extras: ["aceite de oliva", "sal", "limón"],
+    pasos: [
+      "Corta la palta y el tomate en cubos, la cebolla en pluma.",
+      "Mezcla todo, añade aceite, sal y jugo de limón."
+    ]
+  },
+  {
+    nombre: "Plato de atún con arroz",
+    categorias: ["proteinas"],
+    productos: ["atún", "arroz"],
+    extras: ["aceite de oliva", "sal"],
+    pasos: [
+      "Cocina el arroz.",
+      "Sirve el atún con el arroz, añade aceite y sal."
+    ]
+  },
+  {
+    nombre: "Almuerzo clásico",
+    categorias: ["proteinas", "guarnicion", "frutas"],
+    productos: [],
+    extras: ["aceite de oliva", "sal"],
+    pasos: [
+      "Cocina la verdura seleccionada al vapor o en ensalada.",
+      "Cocina la proteína (carne, pollo, atún, etc.) a la plancha o hervida.",
+      "Prepara la guarnición (arroz, fideos, papas, etc.).",
+      "Sirve todo junto y acompaña con fruta fresca."
+    ]
+  },
+  // ... puedes agregar más recetas aquí ...
+];
+
+// Mapear productos a categorías especiales
+const MAPEO_CATEGORIAS = {
+  proteinas: ["carne", "pollo", "cerdo", "pescado", "atún", "huevo", "jurel", "salmón", "reineta", "merluza"],
+  guarnicion: ["arroz", "fideos", "papas", "quinoa", "cuscús", "mote", "granos"],
+  frutas: ["plátano", "manzana", "pera", "uva", "kiwi", "naranja", "mandarina", "frutilla", "palta"],
+  legumbres: ["lentejas", "porotos negros", "porotos", "garbanzos", "habas", "arvejas", "choclo"],
+  verduras: ["lechuga", "tomate", "cebolla", "zapallo italiano", "zanahoria", "palta", "pepino", "betarraga", "apio", "repollo", "acelga", "espinaca", "rabanito", "alcachofa", "coliflor", "brócoli", "kale", "espárragos", "champiñones", "porotos verdes", "zapallito italiano cocido", "palmitos", "achicoria"]
+};
+
+function obtenerCombinaciones(receta, productos) {
+  // Para cada categoría especial, busca productos disponibles
+  let combinaciones = [{}];
+  for (const cat of receta.categorias || []) {
+    let opciones = productos.filter(p => (MAPEO_CATEGORIAS[cat]||[]).includes(p.nombre.toLowerCase()) && p.cantidad > 0);
+    if (opciones.length === 0) {
+      // Si no hay productos, marca como faltante
+      combinaciones.forEach(c => c[cat] = null);
+    } else {
+      // Genera combinaciones para cada opción
+      let nuevasCombinaciones = [];
+      for (const c of combinaciones) {
+        for (const prod of opciones) {
+          nuevasCombinaciones.push({ ...c, [cat]: prod });
+        }
+      }
+      combinaciones = nuevasCombinaciones;
+    }
+  }
+  // Para productos específicos
+  for (const prodName of receta.productos || []) {
+    let opciones = productos.filter(p => p.nombre.toLowerCase() === prodName.toLowerCase() && p.cantidad > 0);
+    if (opciones.length === 0) {
+      combinaciones.forEach(c => c[prodName] = null);
+    } else {
+      combinaciones.forEach(c => c[prodName] = opciones[0]);
+    }
+  }
+  return combinaciones;
+}
+
+// Recetas clásicas de ensaladas (combinaciones típicas)
+const ENSALADAS_CLASICAS = [
+  // Ensaladas básicas de 2 ingredientes
+  ["tomate", "cebolla"],
+  ["lechuga", "tomate"],
+  ["palta", "tomate"],
+  ["zanahoria", "betarraga"],
+  ["lechuga", "cebolla"],
+  ["lechuga", "palta"],
+  ["tomate", "pepino"],
+  ["lechuga", "zanahoria"],
+  ["palta", "cebolla"],
+  ["zanahoria", "pepino"],
+  ["betarraga", "cebolla"],
+  ["tomate", "betarraga"],
+  ["lechuga", "pepino"],
+  ["palta", "zanahoria"],
+  ["cebolla", "pepino"],
+  
+  // Ensaladas de 3 ingredientes
+  ["lechuga", "tomate", "cebolla"],
+  ["lechuga", "tomate", "palta"],
+  ["lechuga", "palta", "cebolla"],
+  ["tomate", "cebolla", "pepino"],
+  ["lechuga", "zanahoria", "cebolla"],
+  ["palta", "tomate", "pepino"],
+  ["betarraga", "zanahoria", "cebolla"],
+  ["lechuga", "tomate", "pepino"],
+  ["palta", "zanahoria", "cebolla"],
+  ["tomate", "betarraga", "cebolla"],
+  ["lechuga", "palta", "zanahoria"],
+  ["zanahoria", "pepino", "cebolla"],
+  ["betarraga", "tomate", "pepino"],
+  ["lechuga", "betarraga", "cebolla"],
+  
+  // Ensaladas de 4 ingredientes
+  ["lechuga", "tomate", "cebolla", "pepino"],
+  ["lechuga", "tomate", "palta", "cebolla"],
+  ["lechuga", "palta", "zanahoria", "cebolla"],
+  ["tomate", "betarraga", "zanahoria", "cebolla"],
+  ["lechuga", "tomate", "pepino", "zanahoria"],
+  ["palta", "tomate", "cebolla", "pepino"],
+  ["betarraga", "zanahoria", "cebolla", "pepino"],
+  ["lechuga", "palta", "betarraga", "cebolla"],
+  ["tomate", "zanahoria", "pepino", "cebolla"],
+  ["lechuga", "betarraga", "tomate", "pepino"],
+  
+  // Ensaladas de 5 ingredientes
+  ["lechuga", "tomate", "cebolla", "pepino", "zanahoria"],
+  ["lechuga", "tomate", "palta", "cebolla", "pepino"],
+  ["lechuga", "palta", "zanahoria", "cebolla", "betarraga"],
+  ["tomate", "betarraga", "zanahoria", "cebolla", "pepino"],
+  ["lechuga", "palta", "betarraga", "tomate", "cebolla"],
+  
+  // Ensaladas temáticas
+  ["lechuga", "tomate", "palta"], // Ensalada César básica
+  ["betarraga", "zanahoria", "cebolla"], // Ensalada rusa básica
+  ["tomate", "cebolla", "pepino"], // Ensalada griega básica
+  ["lechuga", "zanahoria", "pepino"], // Ensalada verde crujiente
+  ["palta", "tomate", "betarraga"], // Ensalada colorida
+  ["lechuga", "betarraga", "cebolla"], // Ensalada de invierno
+  ["tomate", "zanahoria", "pepino"], // Ensalada de verano
+  ["palta", "zanahoria", "cebolla"], // Ensalada nutritiva
+  ["lechuga", "tomate", "betarraga"], // Ensalada mediterránea
+  ["cebolla", "pepino", "zanahoria"] // Ensalada crujiente
+];
+
+function mejorEnsalada(productos) {
+  // Obtener todas las verduras disponibles
+  const verdurasDisponibles = productos.filter(p => 
+    MAPEO_CATEGORIAS.verduras.includes(p.nombre.toLowerCase()) && p.cantidad > 0
+  ).map(p => p.nombre.toLowerCase());
+  
+  if (verdurasDisponibles.length === 0) return null;
+  
+  // Si hay pocas verduras, crear combinación aleatoria directamente
+  if (verdurasDisponibles.length <= 3) {
+    const ingredientesSeleccionados = [...verdurasDisponibles].sort(() => Math.random() - 0.5);
+    return {
+      ingredientes: ingredientesSeleccionados,
+      pasos: generarPasosEnsalada(ingredientesSeleccionados)
+    };
+  }
+  
+  // Mezclar el array de recetas para no usar siempre la primera
+  const recetasMezcladas = [...ENSALADAS_CLASICAS].sort(() => Math.random() - 0.5);
+  
+  // Buscar la mejor combinación de ensalada clásica según el inventario
+  for (const receta of recetasMezcladas) {
+    if (receta.every(ing => verdurasDisponibles.includes(ing))) {
+      return {
+        ingredientes: receta,
+        pasos: generarPasosEnsalada(receta)
+      };
+    }
+  }
+  
+  // Si no hay ninguna combinación clásica, crear una combinación aleatoria
+  if (verdurasDisponibles.length >= 2) {
+    // Seleccionar 2-4 ingredientes aleatoriamente
+    const numIngredientes = Math.min(verdurasDisponibles.length, Math.floor(Math.random() * 3) + 2);
+    const ingredientesSeleccionados = [];
+    
+    // Mezclar el array y tomar los primeros elementos
+    const verdurasMezcladas = [...verdurasDisponibles].sort(() => Math.random() - 0.5);
+    
+    for (let i = 0; i < numIngredientes; i++) {
+      ingredientesSeleccionados.push(verdurasMezcladas[i]);
+    }
+    
+    return {
+      ingredientes: ingredientesSeleccionados,
+      pasos: generarPasosEnsalada(ingredientesSeleccionados)
+    };
+  }
+  
+  // Si solo hay una verdura, usarla
+  if (verdurasDisponibles.length === 1) {
+    return {
+      ingredientes: verdurasDisponibles,
+      pasos: generarPasosEnsalada(verdurasDisponibles)
+    };
+  }
+  
+  return null;
+}
+
+function generarPasosEnsalada(ingredientes) {
+  let pasos = [];
+  
+  // Determinar el tipo de ensalada según los ingredientes
+  let tipoEnsalada = "clásica";
+  if (ingredientes.includes('lechuga') && ingredientes.includes('tomate') && ingredientes.includes('palta')) {
+    tipoEnsalada = "César";
+  } else if (ingredientes.includes('betarraga') && ingredientes.includes('zanahoria')) {
+    tipoEnsalada = "Rusa";
+  } else if (ingredientes.includes('tomate') && ingredientes.includes('cebolla') && ingredientes.includes('pepino')) {
+    tipoEnsalada = "Griega";
+  } else if (ingredientes.length >= 4) {
+    tipoEnsalada = "Mixta";
+  }
+  
+  // Paso 1: Preparación específica según ingredientes
+  let preparacion = [];
+  ingredientes.forEach(ing => {
+    if (ing === 'lechuga') preparacion.push('Lava y corta la lechuga en trozos medianos');
+    else if (ing === 'tomate') preparacion.push('Lava y corta el tomate en rodajas o cubos medianos');
+    else if (ing === 'cebolla') preparacion.push('Pela y corta la cebolla en plumas finas (remoja en agua fría 10 min para quitar el picor)');
+    else if (ing === 'palta') preparacion.push('Pela y corta la palta en cubos o rodajas');
+    else if (ing === 'zanahoria') preparacion.push('Pela y ralla la zanahoria o córtala en juliana fina');
+    else if (ing === 'betarraga') preparacion.push('Pela y corta la betarraga en cubos pequeños o rállala');
+    else if (ing === 'pepino') preparacion.push('Lava y corta el pepino en rodajas o cubos (opcional: quita las semillas)');
+    else preparacion.push(`Lava y corta el ${ing} según prefieras`);
+  });
+  pasos.push(preparacion.join('. ') + '.');
+  
+  // Paso 2: Aliño específico según el tipo de ensalada
+  let aliño = "";
+  if (tipoEnsalada === "César") {
+    aliño = "Coloca todos los ingredientes en un bowl. Aliña con aceite de oliva, jugo de limón, sal y pimienta. Opcional: añade queso parmesano rallado.";
+  } else if (tipoEnsalada === "Rusa") {
+    aliño = "Mezcla todos los ingredientes. Aliña con aceite de oliva, vinagre, sal y un toque de azúcar para balancear el sabor.";
+  } else if (tipoEnsalada === "Griega") {
+    aliño = "Coloca los ingredientes en capas. Aliña con aceite de oliva, orégano seco, sal y limón. Opcional: añade queso feta.";
+  } else if (tipoEnsalada === "Mixta") {
+    aliño = "Coloca todos los ingredientes en un bowl grande. Aliña con aceite de oliva, vinagre balsámico, sal y hierbas frescas si tienes.";
+  } else {
+    aliño = "Coloca todos los ingredientes en un bowl y mezcla suavemente. Aliña con aceite de oliva, sal y limón al gusto.";
+  }
+  pasos.push(aliño);
+  
+  // Paso 3: Consejo adicional según ingredientes
+  if (ingredientes.includes('palta')) {
+    pasos.push("Consejo: Añade la palta al final para que no se oxide y mantenga su color verde.");
+  }
+  if (ingredientes.includes('betarraga')) {
+    pasos.push("Consejo: La betarraga puede manchar, usa guantes si es necesario.");
+  }
+  if (ingredientes.length >= 4) {
+    pasos.push("Consejo: Deja reposar la ensalada 5-10 minutos antes de servir para que los sabores se integren.");
+  }
+  
+  return pasos;
+}
+
+function obtenerCombinacionesPersonalizadas(receta, productos) {
+  // Selecciona 1 proteína, 1 guarnición, 1 fruta, mejor ensalada
+  let proteinas = productos.filter(p => MAPEO_CATEGORIAS.proteinas.includes(p.nombre.toLowerCase()) && p.cantidad > 0);
+  let guarniciones = productos.filter(p => MAPEO_CATEGORIAS.guarnicion.includes(p.nombre.toLowerCase()) && p.cantidad > 0);
+  let frutas = productos.filter(p => MAPEO_CATEGORIAS.frutas.includes(p.nombre.toLowerCase()) && p.cantidad > 0);
+  let legumbres = productos.filter(p => MAPEO_CATEGORIAS.legumbres.includes(p.nombre.toLowerCase()) && p.cantidad > 0);
+  let ensalada = mejorEnsalada(productos);
+  let combinaciones = [];
+  // Generar todas las combinaciones posibles
+  for (const prot of proteinas.length ? proteinas : [null]) {
+    for (const guar of guarniciones.length ? guarniciones : [null]) {
+      for (const fru of frutas.length ? frutas : [null]) {
+        for (const leg of legumbres.length ? legumbres : [null]) {
+          combinaciones.push({
+            proteina: prot,
+            guarnicion: guar,
+            fruta: fru,
+            legumbre: leg,
+            ensalada
+          });
+        }
+      }
+    }
+  }
+  return combinaciones;
+}
 
 // --- Renderizado y lógica de la app ---
 const root = document.getElementById("root");
@@ -292,33 +706,95 @@ function render(form = null, alerta = "") {
   }
   if (modoMenu) {
     obtenerProductos().then(productos => {
+      function pickRandom(arr) { return arr.length ? arr[Math.floor(Math.random() * arr.length)] : null; }
+
+      function obtenerCombinacionMenuPersonalizada(menu, productos) {
+        let seleccion = {};
+        for (const cat of menu.categorias) {
+          let opciones = productos.filter(p => {
+            if (cat === 'carne') return ['carne', 'vacuno', 'lomo liso', 'filete', 'posta', 'pollo ganso', 'asiento picaña'].includes(p.nombre.toLowerCase());
+            if (cat === 'pollo') return p.nombre.toLowerCase().includes('pollo');
+            if (cat === 'pescado') return ['pescado', 'salmón', 'reineta', 'merluza', 'atún', 'jurel'].includes(p.nombre.toLowerCase());
+            if (cat === 'cerdo') return p.nombre.toLowerCase().includes('cerdo');
+            if (cat === 'huevo') return p.nombre.toLowerCase().includes('huevo');
+            if (cat === 'atún') return p.nombre.toLowerCase().includes('atún');
+            if (cat === 'legumbres') return MAPEO_CATEGORIAS.legumbres.includes(p.nombre.toLowerCase());
+            if (cat === 'guarnicion') return MAPEO_CATEGORIAS.guarnicion.includes(p.nombre.toLowerCase());
+            if (cat === 'papas') return p.nombre.toLowerCase().includes('papa');
+            if (cat === 'cuscús') return p.nombre.toLowerCase().includes('cuscús');
+            if (cat === 'quinoa') return p.nombre.toLowerCase().includes('quinoa');
+            if (cat === 'fideos') return p.nombre.toLowerCase().includes('fideo');
+            if (cat === 'mote') return p.nombre.toLowerCase().includes('mote');
+            if (cat === 'frutas') return MAPEO_CATEGORIAS.frutas.includes(p.nombre.toLowerCase());
+            return false;
+          }).filter(p => p.cantidad > 0);
+          seleccion[cat] = pickRandom(opciones) || null;
+        }
+        // Ensalada: buscar la mejor combinación clásica posible
+        if (menu.ensalada) {
+          const ensalada = mejorEnsalada(productos);
+          seleccion.ensalada = ensalada;
+        }
+        return seleccion;
+      }
+
+      let sugerencias = MENUS.map(menu => {
+        let seleccionada = obtenerCombinacionMenuPersonalizada(menu, productos);
+        // Filtro: completa si todos los ingredientes principales están presentes
+        let completa = menu.categorias.every(cat => seleccionada[cat]) && (!menu.ensalada || (seleccionada.ensalada && seleccionada.ensalada.ingredientes && seleccionada.ensalada.ingredientes.length >= 2));
+        let faltantes = menu.categorias.filter(cat => !seleccionada[cat]);
+        return { menu, seleccionada, completa, faltantes };
+      });
+      let mostrar = sugerencias;
+      if (filtroRecetas === 'completas') mostrar = sugerencias.filter(s => s.completa);
+      if (filtroRecetas === 'faltantes') mostrar = sugerencias.filter(s => !s.completa);
       root.innerHTML = `
-        <h1>Menú de Platos</h1>
-        <button id="btn-volver">Volver al inventario</button>
-        <div style="margin-top:24px">
-          ${PLATOS.map(plato => {
-            return `
-              <div style="margin-bottom:32px;padding:16px;border:1px solid #e2e8f0;border-radius:8px;background:#f9fafb">
-                <h2 style="margin:0 0 8px 0">${plato.nombre}</h2>
-                <strong>Ingredientes principales:</strong>
-                <ul>
-                  ${plato.ingredientes.map(cat => {
-                    const disponibles = productos.filter(p => p.categoria.toLowerCase() === cat.toLowerCase() && p.cantidad > 0).map(p => p.nombre);
-                    const falta = disponibles.length === 0;
-                    return `<li style="color:${falta ? '#e53e3e' : '#222'}">${cat}${falta ? ' (falta)' : ''}
-                      ${disponibles.length > 0 ? `<div style='color:#38a169;font-size:0.95em'>Tienes: ${disponibles.join(", ")}</div>` : ''}
-                    </li>`;
-                  }).join("")}
-                </ul>
-                <strong>Preparación:</strong>
-                <ol>
-                  ${plato.pasos.map(paso => `<li>${paso}</li>`).join("")}
-                </ol>
-              </div>
-            `;
-          }).join("")}
+        <h1>Menú de Recetas</h1>
+        <button id="btn-volver" style="margin-bottom:16px">Volver al inventario</button>
+        <div class="filtros" style="margin-bottom:16px">
+          <label><input type="radio" name="filtroRecetas" value="todas" ${filtroRecetas==='todas'?'checked':''}/> Todas</label>
+          <label><input type="radio" name="filtroRecetas" value="completas" ${filtroRecetas==='completas'?'checked':''}/> Solo completas</label>
+          <label><input type="radio" name="filtroRecetas" value="faltantes" ${filtroRecetas==='faltantes'?'checked':''}/> Con faltantes</label>
+          <button id="btn-regenerar" style="margin-top:8px">Regenerar menú</button>
         </div>
+        ${mostrar.map(({menu, seleccionada, completa, faltantes}) => `
+          <div class="menu-item" style="margin-bottom:24px;padding:16px;border:1px solid #e2e8f0;border-radius:8px;background:#f9fafb">
+            <h3>${menu.nombre}</h3>
+            <ul>
+              ${menu.categorias.map(cat => `<li><b>${cat.charAt(0).toUpperCase() + cat.slice(1)}:</b> ${seleccionada[cat] ? seleccionada[cat].nombre : '<span style=\'color:#e53e3e\'>FALTA</span>'}</li>`).join('')}
+              ${seleccionada.ensalada ? `<li><b>Ensalada:</b> ${seleccionada.ensalada.ingredientes ? seleccionada.ensalada.ingredientes.join(', ') : 'No disponible'}</li>` : ''}
+            </ul>
+            <strong>Preparación:</strong>
+            <ol>
+              ${menu.pasos.map((paso, idx) => {
+                let pasoFinal = paso;
+                menu.categorias.forEach(cat => {
+                  if (seleccionada[cat]) {
+                    pasoFinal = pasoFinal.replace(new RegExp(cat, 'gi'), seleccionada[cat].nombre);
+                  } else {
+                    pasoFinal = pasoFinal.replace(new RegExp(cat, 'gi'), '<span style=\'color:#e53e3e;font-weight:bold\'>NO DISPONIBLE</span>');
+                  }
+                });
+                return `<li${!completa && faltantes.some(f => pasoFinal.includes('NO DISPONIBLE')) ? " style='color:#e53e3e'" : ''}>${pasoFinal}</li>`;
+              }).join('')}
+              ${seleccionada.ensalada && seleccionada.ensalada.pasos ? seleccionada.ensalada.pasos.map((paso, idx) => `<li>${paso}</li>`).join('') : ''}
+            </ol>
+          </div>
+        `).join('')}
       `;
+      // Filtro de recetas
+      document.querySelectorAll('input[name="filtroRecetas"]').forEach(radio => {
+        radio.onchange = function() {
+          filtroRecetas = this.value;
+          render();
+        };
+      });
+      const btnRegenerar = document.getElementById("btn-regenerar");
+      if (btnRegenerar) {
+        btnRegenerar.onclick = function() {
+          render();
+        };
+      }
       const btnVolver = document.getElementById("btn-volver");
       if (btnVolver) {
         btnVolver.onclick = function() {
@@ -349,199 +825,217 @@ function render(form = null, alerta = "") {
       productosFiltrados = productos.filter(p => carrito.includes(p.id));
     }
     root.innerHTML = `
-      <h1>Inventario de Refrigerador</h1>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-        <button id="btn-menu">Menú</button>
-        <button id="btn-lista" ${modoListaCompras ? 'disabled' : ''}>Lista de compras</button>
-        <input id="busqueda" placeholder="Buscar producto..." value="${textoBusqueda}" style="flex:1;max-width:200px" />
-      </div>
-      ${alerta ? `<div class="alert">${alerta}</div>` : ""}
-      <form id="form-producto" style="margin-bottom:24px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <input name="nombre" placeholder="Nombre del producto" value="${form?.nombre || ""}" required />
-        <select name="categoria">
-          ${CATEGORIAS.map(cat => `<option${catSel === cat ? " selected" : ""}>${cat}</option>`).join("")}
-        </select>
-        <input name="cantidad" type="number" min="0" step="1" value="${form?.cantidad ?? ""}" placeholder="Cantidad" />
-        <input name="fechaCompra" type="date" value="${form?.fechaCompra || ""}" required />
-        <button type="submit">${editId ? "Actualizar" : "Agregar"}</button>
-        ${editId ? `<button type="button" id="cancelar">Cancelar</button>` : ""}
-      </form>
-      <table style="width:100%;border-collapse:collapse">
-        <thead>
-          <tr style="background:#e2e8f0">
-            <th>Categoría</th>
-            <th>Producto</th>
-            <th>Cantidad</th>
-            <th>Fecha de compra</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          ${productosFiltrados.length === 0 ? `<tr><td colspan="5" style="text-align:center">No hay productos</td></tr>` : productosFiltrados.map(prod => {
-            let cantidad = 0;
-            if (typeof prod.cantidad === 'number' && !isNaN(prod.cantidad)) {
-              cantidad = prod.cantidad;
-            } else if (typeof prod.cantidad === 'string' && prod.cantidad.trim() !== '' && !isNaN(Number(prod.cantidad))) {
-              cantidad = Number(prod.cantidad);
-            }
-            // Carrito
-            let carrito = getCarrito();
-            let enCarrito = carrito.includes(prod.id);
-            return `<tr>
-              <td>${prod.categoria}</td>
-              <td>${prod.nombre}</td>
-              <td>${cantidad}</td>
-              <td>${prod.fechaCompra || ""}</td>
-              <td>
-                <button data-edit="${prod.id}">Editar</button>
-                <button data-delstock="${prod.id}" style="background:#e53e3e">Borrar stock</button>
-                ${modoListaCompras
-                  ? `<button data-quitarcarrito="${prod.id}" style="background:#f59e42">Quitar del carrito</button>`
-                  : enCarrito
-                    ? `<button disabled style="background:#a0aec0">Añadido al carrito</button>`
-                    : `<button data-addcarrito="${prod.id}" style="background:#38a169">Añadir al carrito</button>`}
-                <button data-historial="${prod.id}" style="background:#718096">Historial</button>
-              </td>
-            </tr>`;
-          }).join("")}
-        </tbody>
-      </table>
-      <div id="historial-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);align-items:center;justify-content:center;z-index:10">
-        <div style="background:#fff;padding:24px 16px;border-radius:8px;max-width:350px;width:90%">
-          <h3>Historial de cambios</h3>
-          <ul id="historial-lista" style="max-height:200px;overflow:auto"></ul>
-          <button id="cerrar-historial">Cerrar</button>
+        <h1>Inventario del Refrigerador</h1>
+        ${alerta ? `<div class="alert">${alerta}</div>` : ''}
+        
+        <form id="form-producto" class="form-group">
+          <input type="text" id="nombre" placeholder="Nombre del producto" value="${editId ? (productos.find(p => p.id === editId)?.nombre || '') : ''}" required>
+          <select id="categoria" required>
+            ${CATEGORIAS.map(cat => `<option value="${cat}" ${cat === (editId ? (productos.find(p => p.id === editId)?.categoria || categoriaSeleccionada) : categoriaSeleccionada) ? 'selected' : ''}>${cat}</option>`).join('')}
+          </select>
+          <input type="number" id="cantidad" placeholder="Cantidad" min="0" step="0.1" value="${editId ? (productos.find(p => p.id === editId)?.cantidad || '') : ''}">
+          <input type="text" id="unidad" placeholder="Unidad (kg, unidades, etc.)" value="${editId ? (productos.find(p => p.id === editId)?.unidad || '') : ''}">
+          <input type="date" id="fechaCompra" placeholder="Fecha de compra" value="${editId ? (productos.find(p => p.id === editId)?.fechaCompra || '') : ''}">
+          <button type="submit">${editId ? 'Actualizar' : 'Agregar'} Producto</button>
+          ${editId ? '<button type="button" onclick="cancelarEdicion()">Cancelar</button>' : ''}
+        </form>
+
+        <div style="margin: 16px 0">
+          <input type="text" id="busqueda" placeholder="Buscar productos..." value="${textoBusqueda}">
+          <select id="filtro-categoria" style="margin-left: 8px">
+            <option value="">Todas las categorías</option>
+            ${CATEGORIAS.map(cat => `<option value="${cat}" ${cat === categoriaSeleccionada ? 'selected' : ''}>${cat}</option>`).join('')}
+          </select>
         </div>
-      </div>
-    `;
+
+        <div style="margin-bottom: 16px">
+          <button onclick="modoListaCompras = !modoListaCompras; render()">${modoListaCompras ? 'Ver Inventario' : 'Ver Lista de Compras'}</button>
+          <button onclick="modoMenu = true; render()">Ver Menú</button>
+          <button onclick="limpiarProductos()" style="background: #e53e3e">Limpiar Todo</button>
+        </div>
+
+        ${modoListaCompras ? `
+          <h2>Lista de Compras</h2>
+          <div id="lista-compras"></div>
+        ` : `
+          <h2>Productos</h2>
+          <div id="productos"></div>
+        `}
+      `;
     // Restaurar foco y posición del cursor en búsqueda
     const newBusquedaInput = document.getElementById("busqueda");
     if (busquedaHadFocus && newBusquedaInput) {
       newBusquedaInput.focus();
       newBusquedaInput.setSelectionRange(cursorStart, cursorEnd);
     }
-    newBusquedaInput.oninput = function(e) {
-      textoBusqueda = this.value;
-      render({ categoria: catSel });
-    };
-    document.getElementById("btn-lista").onclick = function() {
-      modoListaCompras = true;
-      render({ categoria: catSel });
-    };
+    
     // Eventos del formulario
-    document.getElementById("form-producto").onsubmit = function(e) {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(this));
-      if (!data.nombre || !data.fechaCompra) {
-        render(data, "Por favor, completa todos los campos obligatorios.");
-        return;
-      }
-      data.cantidad = Number(data.cantidad);
-      if (isNaN(data.cantidad) || data.cantidad < 0) data.cantidad = 0;
-      if (editId) data.id = editId;
-      guardarProducto(data).then(() => {
-        guardarHistorial(data.id || Date.now(), editId ? "Actualización" : "Alta", data.cantidad);
-        location.reload();
-      });
-    };
-    if (editId) {
-      document.getElementById("cancelar").onclick = function() {
-        editId = null;
-        modoListaCompras = false;
-        textoBusqueda = "";
-        render({ categoria: catSel });
-      };
-    }
-    // Evento para cambiar la categoría y filtrar
-    document.querySelector('select[name="categoria"]').onchange = function(e) {
-      modoListaCompras = false;
-      textoBusqueda = "";
-      render({ categoria: this.value });
-    };
-    // Botones de editar
-    root.querySelectorAll("button[data-edit]").forEach(btn => {
-      btn.onclick = () => {
-        const prod = productos.find(p => p.id == btn.getAttribute("data-edit"));
-        editId = prod.id;
-        modoListaCompras = false;
-        render(prod);
-      };
-    });
-    // Botón de borrar stock
-    root.querySelectorAll("button[data-delstock]").forEach(btn => {
-      btn.onclick = () => {
-        const id = Number(btn.getAttribute("data-delstock"));
-        const prod = productos.find(p => p.id === id);
-        if (!prod) return;
-        prod.cantidad = 0;
-        prod.fechaCompra = "";
-        guardarProducto(prod).then(() => {
-          guardarHistorial(prod.id, "Stock borrado", 0);
+    const formProducto = document.getElementById("form-producto");
+    if (formProducto) {
+      formProducto.onsubmit = function(e) {
+        e.preventDefault();
+        const nombre = document.getElementById("nombre").value;
+        const categoria = document.getElementById("categoria").value;
+        const cantidad = Number(document.getElementById("cantidad").value) || 0;
+        const unidad = document.getElementById("unidad").value;
+        const fechaCompra = document.getElementById("fechaCompra").value;
+        
+        if (!nombre || !categoria) {
+          render(null, "Por favor, completa todos los campos obligatorios.");
+          return;
+        }
+        
+        const data = {
+          nombre,
+          categoria,
+          cantidad,
+          unidad,
+          fechaCompra
+        };
+        
+        if (editId) data.id = editId;
+        
+        guardarProducto(data).then(() => {
+          guardarHistorial(data.id || Date.now(), editId ? "Actualización" : "Alta", data.cantidad);
           location.reload();
         });
       };
-    });
-    // Botón de marcar como comprado
-    root.querySelectorAll("button[data-comprado]").forEach(btn => {
-      btn.onclick = () => {
-        const prod = productos.find(p => p.id == btn.getAttribute("data-comprado"));
-        const nuevoStock = prompt(`¿Cuánto stock tienes ahora de "${prod.nombre}"?`, prod.cantidad || 1);
-        if (nuevoStock !== null && !isNaN(Number(nuevoStock))) {
-          prod.cantidad = Number(nuevoStock);
-          prod.fechaCompra = new Date().toISOString().slice(0,10);
-          guardarProducto(prod).then(() => {
-            guardarHistorial(prod.id, "Compra", prod.cantidad);
-            modoListaCompras = false;
-            render({ categoria: catSel });
-          });
-        }
-      };
-    });
-    // Botón de historial
-    root.querySelectorAll("button[data-historial]").forEach(btn => {
-      btn.onclick = () => {
-        const prodId = Number(btn.getAttribute("data-historial"));
-        const modal = document.getElementById("historial-modal");
-        const lista = document.getElementById("historial-lista");
-        obtenerHistorial(prodId).then(historial => {
-          lista.innerHTML = historial.length === 0 ? '<li>No hay movimientos</li>' : historial.map(h => `<li>${new Date(h.fecha).toLocaleString()} - ${h.cambio} (${h.cantidad})</li>`).join("");
-          modal.style.display = "flex";
-        });
-        document.getElementById("cerrar-historial").onclick = function() {
-          modal.style.display = "none";
-        };
-      };
-    });
-    // Botón añadir al carrito
-    root.querySelectorAll("button[data-addcarrito]").forEach(btn => {
-      btn.onclick = () => {
-        const id = Number(btn.getAttribute("data-addcarrito"));
-        let carrito = getCarrito();
-        if (!carrito.includes(id)) {
-          carrito.push(id);
-          setCarrito(carrito);
-        }
-        render({ categoria: catSel });
-      };
-    });
-    // Botón quitar del carrito
-    root.querySelectorAll("button[data-quitarcarrito]").forEach(btn => {
-      btn.onclick = () => {
-        const id = Number(btn.getAttribute("data-quitarcarrito"));
-        let carrito = getCarrito();
-        carrito = carrito.filter(pid => pid !== id);
-        setCarrito(carrito);
-        render({ categoria: catSel });
-      };
-    });
-    // Asignar evento al botón Menú
-    const btnMenu = document.getElementById("btn-menu");
-    if (btnMenu) {
-      btnMenu.addEventListener('click', function() {
-        modoMenu = true;
-        render();
-      });
     }
+    
+    // Evento para búsqueda
+    if (newBusquedaInput) {
+      newBusquedaInput.oninput = function(e) {
+        textoBusqueda = this.value;
+        render();
+      };
+    }
+    
+    // Evento para filtro de categoría
+    const filtroCategoria = document.getElementById("filtro-categoria");
+    if (filtroCategoria) {
+      filtroCategoria.onchange = function() {
+        categoriaSeleccionada = this.value;
+        localStorage.setItem('categoriaSeleccionada', categoriaSeleccionada);
+        render();
+      };
+    }
+    
+    // Mostrar productos o lista de compras
+    if (modoListaCompras) {
+      const carrito = getCarrito();
+      const productosCarrito = productos.filter(p => carrito.includes(p.id));
+      document.getElementById("lista-compras").innerHTML = productosCarrito.length === 0 
+        ? "<p>No hay productos en la lista de compras</p>"
+        : productosCarrito.map(prod => `
+            <div class="producto-item" style="padding:12px;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:8px;background:#fff">
+              <strong>${prod.nombre}</strong> (${prod.categoria})
+              <button onclick="quitarDelCarrito(${prod.id})" style="background:#e53e3e;margin-left:8px">Quitar</button>
+            </div>
+          `).join('');
+    } else {
+      // Filtrar productos
+      let productosFiltrados = productos;
+      if (categoriaSeleccionada) {
+        productosFiltrados = productos.filter(p => p.categoria === categoriaSeleccionada);
+      }
+      if (textoBusqueda) {
+        productosFiltrados = productosFiltrados.filter(p => 
+          p.nombre.toLowerCase().includes(textoBusqueda.toLowerCase())
+        );
+      }
+      
+      const carrito = getCarrito();
+      document.getElementById("productos").innerHTML = productosFiltrados.length === 0 
+        ? "<p>No hay productos</p>"
+        : productosFiltrados.map(prod => {
+            let cantidad = 0;
+            if (typeof prod.cantidad === 'number' && !isNaN(prod.cantidad)) {
+              cantidad = prod.cantidad;
+            } else if (typeof prod.cantidad === 'string' && prod.cantidad.trim() !== '' && !isNaN(Number(prod.cantidad))) {
+              cantidad = Number(prod.cantidad);
+            }
+            const enCarrito = carrito.includes(prod.id);
+            
+            return `
+              <div class="producto-item" style="padding:12px;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:8px;background:#fff">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+                  <div>
+                    <strong>${prod.nombre}</strong> (${prod.categoria})
+                    <br><small>Cantidad: ${cantidad} ${prod.unidad || ''}</small>
+                    ${prod.fechaCompra ? `<br><small>Compra: ${prod.fechaCompra}</small>` : ''}
+                  </div>
+                  <div style="display:flex;gap:4px;flex-wrap:wrap">
+                    <button onclick="editarProducto(${prod.id})" class="btn-small">Editar</button>
+                    <button onclick="borrarStock(${prod.id})" class="btn-small" style="background:#e53e3e">Borrar stock</button>
+                    ${enCarrito 
+                      ? `<button disabled class="btn-small" style="background:#a0aec0">En carrito</button>`
+                      : `<button onclick="agregarAlCarrito(${prod.id})" class="btn-small" style="background:#38a169">Añadir al carrito</button>`
+                    }
+                    <button onclick="verHistorial(${prod.id})" class="btn-small" style="background:#718096">Historial</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+    }
+    
+    // Función para cancelar edición
+    window.cancelarEdicion = function() {
+      editId = null;
+      render();
+    };
+    
+    // Funciones para carrito
+    window.agregarAlCarrito = function(id) {
+      const carrito = getCarrito();
+      if (!carrito.includes(id)) {
+        carrito.push(id);
+        setCarrito(carrito);
+        render();
+      }
+    };
+    
+    window.quitarDelCarrito = function(id) {
+      const carrito = getCarrito();
+      const nuevoCarrito = carrito.filter(itemId => itemId !== id);
+      setCarrito(nuevoCarrito);
+      render();
+    };
+    
+    // Funciones para productos
+    window.editarProducto = function(id) {
+      editId = id;
+      render(); // Esto recargará el formulario con los datos del producto
+    };
+    
+    window.borrarStock = function(id) {
+      const prod = productos.find(p => p.id === id);
+      if (prod) {
+        prod.cantidad = 0;
+        prod.fechaCompra = "";
+        guardarProducto(prod).then(() => {
+          guardarHistorial(prod.id, "Borrado de stock", 0);
+          location.reload();
+        });
+      }
+    };
+    
+    window.verHistorial = function(id) {
+      obtenerHistorial(id).then(historial => {
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;z-index:10';
+        modal.innerHTML = `
+          <div style="background:#fff;padding:24px 16px;border-radius:8px;max-width:350px;width:90%;max-height:80vh;overflow:auto">
+            <h3>Historial de cambios</h3>
+            <ul style="max-height:200px;overflow:auto">
+              ${historial.map(h => `<li>${new Date(h.fecha).toLocaleString()} - ${h.cambio} - Cantidad: ${h.cantidad}</li>`).join('')}
+            </ul>
+            <button onclick="this.closest('div[style*=\'position:fixed\']').remove()">Cerrar</button>
+          </div>
+        `;
+        document.body.appendChild(modal);
+      });
+    };
   });
 }
 
@@ -586,4 +1080,4 @@ limpiarProductos()
   .then(() => precargarProteinas())
   .then(() => precargarLacteos())
   .then(() => precargarLegumbres())
-  .then(() => render()); 
+  .then(() => render());
