@@ -156,16 +156,6 @@ function setCarrito(carrito) {
   localStorage.setItem('carritoCompras', JSON.stringify(carrito));
 }
 
-// Cambiar categoría 'Carnes' por 'Proteinas' en CATEGORIAS y productos existentes
-const CATEGORIAS = [
-  "Lácteos",
-  "Verduras",
-  "Frutas",
-  "Proteinas",
-  "Bebidas",
-  "Otros"
-];
-
 // Limpieza de productos para cambiar 'Carnes' a 'Proteinas'
 function migrarCarnesAProteinas() {
   return obtenerProductos().then(productos => {
