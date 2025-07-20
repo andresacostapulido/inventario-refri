@@ -835,7 +835,6 @@ function render(form = null, alerta = "") {
           </select>
           <input type="number" id="cantidad" placeholder="Cantidad" min="0" step="0.1" value="${editId ? (productos.find(p => p.id === editId)?.cantidad || '') : ''}">
           <input type="text" id="unidad" placeholder="Unidad (kg, unidades, etc.)" value="${editId ? (productos.find(p => p.id === editId)?.unidad || '') : ''}">
-          <input type="date" id="fechaCompra" placeholder="Fecha de compra" value="${editId ? (productos.find(p => p.id === editId)?.fechaCompra || '') : ''}">
           <button type="submit">${editId ? 'Actualizar' : 'Agregar'} Producto</button>
           ${editId ? '<button type="button" onclick="cancelarEdicion()">Cancelar</button>' : ''}
         </form>
@@ -878,7 +877,6 @@ function render(form = null, alerta = "") {
         const categoria = document.getElementById("categoria").value;
         const cantidad = Number(document.getElementById("cantidad").value) || 0;
         const unidad = document.getElementById("unidad").value;
-        const fechaCompra = document.getElementById("fechaCompra").value;
         
         if (!nombre || !categoria) {
           render(null, "Por favor, completa todos los campos obligatorios.");
@@ -889,8 +887,7 @@ function render(form = null, alerta = "") {
           nombre,
           categoria,
           cantidad,
-          unidad,
-          fechaCompra
+          unidad
         };
         
         if (editId) data.id = editId;
@@ -924,12 +921,16 @@ function render(form = null, alerta = "") {
     if (modoListaCompras) {
       const carrito = getCarrito();
       const productosCarrito = productos.filter(p => carrito.includes(p.id));
+      // Ordenar productos del carrito alfabéticamente
+      productosCarrito.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', {sensitivity: 'base'}));
       document.getElementById("lista-compras").innerHTML = productosCarrito.length === 0 
         ? "<p>No hay productos en la lista de compras</p>"
         : productosCarrito.map(prod => `
             <div class="producto-item" style="padding:12px;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:8px;background:#fff">
-              <strong>${prod.nombre}</strong> (${prod.categoria})
-              <button onclick="quitarDelCarrito(${prod.id})" style="background:#e53e3e;margin-left:8px">Quitar</button>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <strong>${prod.nombre}</strong> (${prod.categoria})
+                <button onclick="quitarDelCarrito(${prod.id})" style="background:#e53e3e;margin-left:8px;padding:6px 10px;border:none;border-radius:4px;color:white;cursor:pointer;font-size:1rem" title="Quitar del carrito">❌</button>
+              </div>
             </div>
           `).join('');
     } else {
@@ -943,6 +944,9 @@ function render(form = null, alerta = "") {
           p.nombre.toLowerCase().includes(textoBusqueda.toLowerCase())
         );
       }
+      
+      // Ordenar productos alfabéticamente por nombre
+      productosFiltrados.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', {sensitivity: 'base'}));
       
       const carrito = getCarrito();
       document.getElementById("productos").innerHTML = productosFiltrados.length === 0 
@@ -962,16 +966,14 @@ function render(form = null, alerta = "") {
                   <div>
                     <strong>${prod.nombre}</strong> (${prod.categoria})
                     <br><small>Cantidad: ${cantidad} ${prod.unidad || ''}</small>
-                    ${prod.fechaCompra ? `<br><small>Compra: ${prod.fechaCompra}</small>` : ''}
                   </div>
                   <div style="display:flex;gap:4px;flex-wrap:wrap">
-                    <button onclick="editarProducto(${prod.id})" class="btn-small">Editar</button>
-                    <button onclick="borrarStock(${prod.id})" class="btn-small" style="background:#e53e3e">Borrar stock</button>
+                    <button onclick="editarProducto(${prod.id})" class="btn-small" title="Editar">✏️</button>
+                    <button onclick="borrarStock(${prod.id})" class="btn-small" style="background:#e53e3e" title="Borrar stock">🗑️</button>
                     ${enCarrito 
-                      ? `<button disabled class="btn-small" style="background:#a0aec0">En carrito</button>`
-                      : `<button onclick="agregarAlCarrito(${prod.id})" class="btn-small" style="background:#38a169">Añadir al carrito</button>`
+                      ? `<button disabled class="btn-small" style="background:#a0aec0" title="En carrito">🛒</button>`
+                      : `<button onclick="agregarAlCarrito(${prod.id})" class="btn-small" style="background:#38a169" title="Añadir al carrito">🛒</button>`
                     }
-                    <button onclick="verHistorial(${prod.id})" class="btn-small" style="background:#718096">Historial</button>
                   </div>
                 </div>
               </div>
@@ -1006,35 +1008,33 @@ function render(form = null, alerta = "") {
     window.editarProducto = function(id) {
       editId = id;
       render(); // Esto recargará el formulario con los datos del producto
+      
+      // Hacer scroll automático al formulario después de un pequeño delay
+      setTimeout(() => {
+        const formProducto = document.getElementById("form-producto");
+        if (formProducto) {
+          formProducto.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+          // También enfocar el campo de cantidad
+          const cantidadInput = document.getElementById("cantidad");
+          if (cantidadInput) {
+            cantidadInput.focus();
+          }
+        }
+      }, 100);
     };
     
     window.borrarStock = function(id) {
       const prod = productos.find(p => p.id === id);
       if (prod) {
         prod.cantidad = 0;
-        prod.fechaCompra = "";
         guardarProducto(prod).then(() => {
           guardarHistorial(prod.id, "Borrado de stock", 0);
           location.reload();
         });
       }
-    };
-    
-    window.verHistorial = function(id) {
-      obtenerHistorial(id).then(historial => {
-        const modal = document.createElement('div');
-        modal.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;z-index:10';
-        modal.innerHTML = `
-          <div style="background:#fff;padding:24px 16px;border-radius:8px;max-width:350px;width:90%;max-height:80vh;overflow:auto">
-            <h3>Historial de cambios</h3>
-            <ul style="max-height:200px;overflow:auto">
-              ${historial.map(h => `<li>${new Date(h.fecha).toLocaleString()} - ${h.cambio} - Cantidad: ${h.cantidad}</li>`).join('')}
-            </ul>
-            <button onclick="this.closest('div[style*=\'position:fixed\']').remove()">Cerrar</button>
-          </div>
-        `;
-        document.body.appendChild(modal);
-      });
     };
   });
 }
