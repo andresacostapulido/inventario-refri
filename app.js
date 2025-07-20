@@ -3,7 +3,7 @@ const CATEGORIAS = [
   "Lácteos",
   "Verduras",
   "Frutas",
-  "Carnes",
+  "Proteinas",
   "Bebidas",
   "Otros"
 ];
@@ -156,6 +156,67 @@ function setCarrito(carrito) {
   localStorage.setItem('carritoCompras', JSON.stringify(carrito));
 }
 
+// Cambiar categoría 'Carnes' por 'Proteinas' en CATEGORIAS y productos existentes
+const CATEGORIAS = [
+  "Lácteos",
+  "Verduras",
+  "Frutas",
+  "Proteinas",
+  "Bebidas",
+  "Otros"
+];
+
+// Limpieza de productos para cambiar 'Carnes' a 'Proteinas'
+function migrarCarnesAProteinas() {
+  return obtenerProductos().then(productos => {
+    return Promise.all(productos.map(prod => {
+      if (prod.categoria === 'Proteinas') {
+        prod.categoria = 'Proteinas';
+        return guardarProducto(prod);
+      }
+      return Promise.resolve();
+    }));
+  });
+}
+
+// Precarga de proteinas si la base está vacía de ellas
+const PROTEINAS_PREDEFINIDAS = ["carne", "pollo", "cerdo", "pescado"];
+function precargarProteinas() {
+  return obtenerProductos().then(productos => {
+    const yaExisten = productos.filter(p => p.categoria === "Proteinas").map(p => p.nombre);
+    const nuevas = PROTEINAS_PREDEFINIDAS.filter(nombre => !yaExisten.includes(nombre));
+    if (nuevas.length > 0) {
+      return Promise.all(
+        nuevas.map(nombre => guardarProducto({
+          nombre,
+          categoria: "Proteinas",
+          cantidad: 0,
+          fechaCompra: ""
+        }))
+      );
+    }
+  });
+}
+
+// Precarga de lácteos si la base está vacía de ellos
+const LACTEOS_PREDEFINIDOS = ["leche", "yogurt", "quesos", "crema de leche"];
+function precargarLacteos() {
+  return obtenerProductos().then(productos => {
+    const yaExisten = productos.filter(p => p.categoria === "Lácteos").map(p => p.nombre);
+    const nuevas = LACTEOS_PREDEFINIDOS.filter(nombre => !yaExisten.includes(nombre));
+    if (nuevas.length > 0) {
+      return Promise.all(
+        nuevas.map(nombre => guardarProducto({
+          nombre,
+          categoria: "Lácteos",
+          cantidad: 0,
+          fechaCompra: ""
+        }))
+      );
+    }
+  });
+}
+
 // --- Renderizado y lógica de la app ---
 const root = document.getElementById("root");
 let editId = null;
@@ -228,6 +289,9 @@ function render(form = null, alerta = "") {
             } else if (typeof prod.cantidad === 'string' && prod.cantidad.trim() !== '' && !isNaN(Number(prod.cantidad))) {
               cantidad = Number(prod.cantidad);
             }
+            // Carrito
+            let carrito = getCarrito();
+            let enCarrito = carrito.includes(prod.id);
             return `<tr>
               <td>${prod.categoria}</td>
               <td>${prod.nombre}</td>
@@ -238,7 +302,9 @@ function render(form = null, alerta = "") {
                 <button data-delstock="${prod.id}" style="background:#e53e3e">Borrar stock</button>
                 ${modoListaCompras
                   ? `<button data-quitarcarrito="${prod.id}" style="background:#f59e42">Quitar del carrito</button>`
-                  : `<button data-addcarrito="${prod.id}" style="background:#38a169">Añadir al carrito</button>`}
+                  : enCarrito
+                    ? `<button disabled style="background:#a0aec0">Añadido al carrito</button>`
+                    : `<button data-addcarrito="${prod.id}" style="background:#38a169">Añadir al carrito</button>`}
                 <button data-historial="${prod.id}" style="background:#718096">Historial</button>
               </td>
             </tr>`;
@@ -409,4 +475,10 @@ function limpiarProductos() {
 }
 
 // Inicializar
-limpiarProductos().then(() => precargarVerduras().then(() => precargarFrutas().then(() => render()))); 
+limpiarProductos()
+  .then(() => migrarCarnesAProteinas())
+  .then(() => precargarVerduras())
+  .then(() => precargarFrutas())
+  .then(() => precargarProteinas())
+  .then(() => precargarLacteos())
+  .then(() => render()); 
