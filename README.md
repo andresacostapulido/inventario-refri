@@ -1,4 +1,4 @@
-# 🍽️ Inventario del Refrigerador
+# 🍽️ Inventario y Menús
 
 Una aplicación web moderna y completa para gestionar el inventario de tu refrigerador con funcionalidades avanzadas de Inteligencia Artificial para generar recetas personalizadas.
 
