@@ -383,6 +383,7 @@ const MENUS = [
 ];
 
 let modoMenu = false;
+let modoRecetasEnsaladas = false;
 
 // Filtro de recetas
 let filtroRecetas = 'todas'; // 'todas', 'completas', 'faltantes'
@@ -756,6 +757,7 @@ function render(form = null, alerta = "") {
           <label><input type="radio" name="filtroRecetas" value="completas" ${filtroRecetas==='completas'?'checked':''}/> Solo completas</label>
           <label><input type="radio" name="filtroRecetas" value="faltantes" ${filtroRecetas==='faltantes'?'checked':''}/> Con faltantes</label>
           <button id="btn-regenerar" style="margin-top:8px">Regenerar menú</button>
+          <button id="btn-generar-plato-ia" style="margin-top:8px;margin-left:8px;background:#3182ce;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer">🤖 Generar Plato con IA</button>
         </div>
         ${mostrar.map(({menu, seleccionada, completa, faltantes}) => `
           <div class="menu-item" style="margin-bottom:24px;padding:16px;border:1px solid #e2e8f0;border-radius:8px;background:#f9fafb">
@@ -802,6 +804,280 @@ function render(form = null, alerta = "") {
           render();
         };
       }
+      
+      const btnGenerarPlatoIA = document.getElementById("btn-generar-plato-ia");
+      if (btnGenerarPlatoIA) {
+        btnGenerarPlatoIA.onclick = async function() {
+          // Obtener ingredientes disponibles
+          const ingredientesDisponibles = productos.filter(p => p.cantidad > 0).map(p => p.nombre);
+          
+          if (ingredientesDisponibles.length === 0) {
+            alert('No hay ingredientes disponibles para generar un plato');
+            return;
+          }
+          
+          // Solicitar API key
+          const apiKey = prompt('Por favor, ingresa tu API key de Google Gemini:');
+          if (!apiKey) {
+            alert('Se necesita una API key para generar platos con IA');
+            return;
+          }
+          
+          // Validar formato básico de API key
+          if (apiKey.length < 20) {
+            alert('La API key parece ser muy corta. Verifica que sea una clave válida de Google Gemini.');
+            return;
+          }
+          
+          btnGenerarPlatoIA.textContent = '🤖 Generando plato...';
+          btnGenerarPlatoIA.disabled = true;
+          
+          try {
+            const ingredientes = ingredientesDisponibles.slice(0, 8).join(', '); // Limitar a 8 ingredientes
+            const platosIA = await generarPlatoGemini(ingredientes, apiKey);
+            
+            // Mostrar los platos generados
+            const resultadoDiv = document.createElement('div');
+            resultadoDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:24px;border-radius:12px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);max-width:800px;max-height:90vh;overflow-y:auto;z-index:1000;border:1px solid #e2e8f0';
+            resultadoDiv.innerHTML = `
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <h2 style="margin:0;color:#2d3748">🍽️ 10 Platos Generados con IA</h2>
+                <button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#718096">×</button>
+              </div>
+              <div style="margin-bottom:16px;padding:12px;background:#f7fafc;border-radius:6px;border:1px solid #e2e8f0">
+                <strong>📋 Ingredientes utilizados:</strong> ${ingredientes}
+              </div>
+              ${platosIA.map((plato, index) => `
+                <div style="margin-bottom:24px;padding:16px;border:1px solid #e2e8f0;border-radius:8px;background:#f9fafb">
+                  <h3 style="margin:0 0 12px 0;color:#2d3748;display:flex;align-items:center">
+                    <span style="background:#3182ce;color:white;padding:4px 8px;border-radius:4px;font-size:12px;margin-right:8px">${index + 1}</span>
+                    ${plato.titulo}
+                  </h3>
+                  <div style="margin-bottom:12px;padding:8px;background:#edf2f7;border-radius:4px;font-size:14px">
+                    <strong>⏱️ Tiempo:</strong> ${plato.tiempo_preparacion} | <strong>📊 Dificultad:</strong> ${plato.dificultad}
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px">
+                    <div>
+                      <h4 style="margin:0 0 8px 0;color:#4a5568">Ingredientes:</h4>
+                      <ul style="margin:0;padding-left:16px;font-size:14px">
+                        ${plato.ingredientes.map(ing => `<li>${ing}</li>`).join('')}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 style="margin:0 0 8px 0;color:#4a5568">Preparación:</h4>
+                      <ol style="margin:0;padding-left:16px;font-size:14px">
+                        ${plato.pasos.map(paso => `<li>${paso}</li>`).join('')}
+                      </ol>
+                    </div>
+                  </div>
+                  <div style="margin-bottom:12px">
+                    <h4 style="margin:0 0 8px 0;color:#4a5568">Información nutricional:</h4>
+                    <p style="margin:0;font-size:14px">${plato.nutricion}</p>
+                  </div>
+                  <div style="padding:8px;background:#edf2f7;border-radius:4px">
+                    <strong style="color:#4a5568">💡 Consejos:</strong>
+                    <ul style="margin:8px 0 0 0;padding-left:16px;font-size:14px">
+                      ${plato.consejos.map(consejo => `<li>${consejo}</li>`).join('')}
+                    </ul>
+                  </div>
+                </div>
+              `).join('')}
+              <p style="margin-top:16px;font-style:italic;color:#666;text-align:center">
+                🔄 <button onclick="generarNuevoPlatoIA()" style="background:#3182ce;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer">Generar otros 10 platos</button>
+              </p>
+            `;
+            document.body.appendChild(resultadoDiv);
+            
+          } catch (error) {
+            console.error('Error completo:', error);
+            console.error('Tipo de error:', error.constructor.name);
+            console.error('Mensaje de error:', error.message);
+            console.error('Stack trace:', error.stack);
+            
+            let mensajeError = 'Error al generar los platos. ';
+            
+            if (error.message.includes('Error de API: 400')) {
+              mensajeError += 'API key inválida. Verifica que tu clave de Google Gemini sea correcta.';
+            } else if (error.message.includes('Error de API: 403')) {
+              mensajeError += 'API key sin permisos. Verifica que tu clave tenga acceso a Gemini.';
+            } else if (error.message.includes('Error de API: 429')) {
+              mensajeError += 'Límite de uso excedido. Intenta más tarde.';
+            } else if (error.message.includes('Error de API: 500')) {
+              mensajeError += 'Error del servidor de Google. Intenta de nuevo.';
+            } else if (error.message.includes('fetch')) {
+              mensajeError += 'Error de conexión. Verifica tu internet.';
+            } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+              mensajeError += 'Error de conexión. Verifica tu internet.';
+            } else if (error.message.includes('parsear')) {
+              mensajeError += 'Error en la respuesta de la IA. Intenta de nuevo.';
+            } else if (error.message.includes('incompleta')) {
+              mensajeError += 'Respuesta incompleta de la IA. Intenta de nuevo.';
+            } else {
+              mensajeError += `Error inesperado: ${error.message}. Verifica tu API key o intenta de nuevo.`;
+            }
+            
+            alert(mensajeError);
+          } finally {
+            btnGenerarPlatoIA.textContent = '🤖 Generar Plato con IA';
+            btnGenerarPlatoIA.disabled = false;
+          }
+        };
+      }
+    });
+    return;
+  }
+  
+  if (modoRecetasEnsaladas) {
+    obtenerProductos().then(productos => {
+      const verdurasDisponibles = productos.filter(p => 
+        MAPEO_CATEGORIAS.verduras.includes(p.nombre.toLowerCase()) && p.cantidad > 0
+      ).map(p => p.nombre.toLowerCase());
+      
+      root.innerHTML = `
+        <h1>Recetas de Ensaladas</h1>
+        <button id="btn-volver-recetas" style="margin-bottom:16px">Volver al inventario</button>
+        
+        <div style="margin-bottom:20px">
+          <h3>Ingredientes disponibles:</h3>
+          <p>${verdurasDisponibles.length > 0 ? verdurasDisponibles.join(', ') : 'No hay verduras disponibles'}</p>
+        </div>
+        
+        <div style="margin-bottom:20px">
+          <button id="btn-buscar-receta" style="background:#38a169;margin-right:10px">🤖 Generar Receta con IA</button>
+        </div>
+        
+        <div id="receta-resultado" style="display:none;padding:16px;border:1px solid #e2e8f0;border-radius:8px;background:#f9fafb;margin-top:20px">
+          <h3 id="receta-titulo"></h3>
+          <div id="receta-contenido"></div>
+        </div>
+      `;
+      
+      const btnVolver = document.getElementById("btn-volver-recetas");
+      if (btnVolver) {
+        btnVolver.onclick = function() {
+          modoRecetasEnsaladas = false;
+          render();
+        };
+      }
+      
+      const btnBuscar = document.getElementById("btn-buscar-receta");
+      if (btnBuscar) {
+        btnBuscar.onclick = async function() {
+          if (verdurasDisponibles.length === 0) {
+            alert('No hay verduras disponibles para generar una receta');
+            return;
+          }
+          
+          // Solicitar API key cada vez
+          const apiKey = prompt('Por favor, ingresa tu API key de Google Gemini:');
+          if (!apiKey) {
+            alert('Se necesita una API key para generar recetas con IA');
+            return;
+          }
+          
+          // Validar formato básico de API key
+          if (apiKey.length < 20) {
+            alert('La API key parece ser muy corta. Verifica que sea una clave válida de Google Gemini.');
+            return;
+          }
+          
+          btnBuscar.textContent = '🤖 Generando receta...';
+          btnBuscar.disabled = true;
+          
+          try {
+            const ingredientes = verdurasDisponibles.slice(0, 6).join(', '); // Limitar a 6 ingredientes
+            const ensaladasIA = await generarRecetaGemini(ingredientes, apiKey);
+            
+            const resultadoDiv = document.getElementById("receta-resultado");
+            const tituloDiv = document.getElementById("receta-titulo");
+            const contenidoDiv = document.getElementById("receta-contenido");
+            
+            tituloDiv.innerHTML = `🥗 10 Ensaladas Generadas con IA`;
+            contenidoDiv.innerHTML = `
+              <div style="margin-bottom:16px;padding:12px;background:#f7fafc;border-radius:6px;border:1px solid #e2e8f0">
+                <strong>📋 Ingredientes utilizados:</strong> ${ingredientes}
+              </div>
+              ${ensaladasIA.map((ensalada, index) => `
+                <div style="margin-bottom:24px;padding:16px;border:1px solid #e2e8f0;border-radius:8px;background:#f9fafb">
+                  <h3 style="margin:0 0 12px 0;color:#2d3748;display:flex;align-items:center">
+                    <span style="background:#38a169;color:white;padding:4px 8px;border-radius:4px;font-size:12px;margin-right:8px">${index + 1}</span>
+                    ${ensalada.titulo}
+                  </h3>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px">
+                    <div>
+                      <h4 style="margin:0 0 8px 0;color:#4a5568">Ingredientes:</h4>
+                      <ul style="margin:0;padding-left:16px;font-size:14px">
+                        ${ensalada.ingredientes.map(ing => `<li>${ing}</li>`).join('')}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 style="margin:0 0 8px 0;color:#4a5568">Preparación:</h4>
+                      <ol style="margin:0;padding-left:16px;font-size:14px">
+                        ${ensalada.pasos.map(paso => `<li>${paso}</li>`).join('')}
+                      </ol>
+                    </div>
+                  </div>
+                  <div style="margin-bottom:12px">
+                    <h4 style="margin:0 0 8px 0;color:#4a5568">Información nutricional:</h4>
+                    <p style="margin:0;font-size:14px">${ensalada.nutricion}</p>
+                  </div>
+                  <div style="padding:8px;background:#edf2f7;border-radius:4px">
+                    <strong style="color:#4a5568">💡 Consejos:</strong>
+                    <ul style="margin:8px 0 0 0;padding-left:16px;font-size:14px">
+                      ${ensalada.consejos.map(consejo => `<li>${consejo}</li>`).join('')}
+                    </ul>
+                  </div>
+                </div>
+              `).join('')}
+              <p style="margin-top:16px;font-style:italic;color:#666;text-align:center">
+                🔄 <button onclick="generarNuevaRecetaIA()" style="background:#38a169;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer">Generar otras 10 ensaladas</button>
+              </p>
+            `;
+            resultadoDiv.style.display = 'block';
+            
+          } catch (error) {
+            console.error('Error completo:', error);
+            console.error('Tipo de error:', error.constructor.name);
+            console.error('Mensaje de error:', error.message);
+            console.error('Stack trace:', error.stack);
+            
+            let mensajeError = 'Error al generar la receta. ';
+            
+            if (error.message.includes('Error de API: 400')) {
+              mensajeError += 'API key inválida. Verifica que tu clave de Google Gemini sea correcta.';
+            } else if (error.message.includes('Error de API: 403')) {
+              mensajeError += 'API key sin permisos. Verifica que tu clave tenga acceso a Gemini.';
+            } else if (error.message.includes('Error de API: 429')) {
+              mensajeError += 'Límite de uso excedido. Intenta más tarde.';
+            } else if (error.message.includes('Error de API: 500')) {
+              mensajeError += 'Error del servidor de Google. Intenta de nuevo.';
+            } else if (error.message.includes('fetch')) {
+              mensajeError += 'Error de conexión. Verifica tu internet.';
+            } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+              mensajeError += 'Error de conexión. Verifica tu internet.';
+            } else if (error.message.includes('parsear')) {
+              mensajeError += 'Error en la respuesta de la IA. Intenta de nuevo.';
+            } else if (error.message.includes('incompleta')) {
+              mensajeError += 'Respuesta incompleta de la IA. Intenta de nuevo.';
+            } else {
+              mensajeError += `Error inesperado: ${error.message}. Verifica tu API key o intenta de nuevo.`;
+            }
+            
+            alert(mensajeError);
+          } finally {
+            btnBuscar.textContent = '🤖 Generar Receta con IA';
+            btnBuscar.disabled = false;
+          }
+        };
+      }
+      
+      // Función para generar nueva receta
+      window.generarNuevaRecetaIA = function() {
+        const btnBuscar = document.getElementById("btn-buscar-receta");
+        if (btnBuscar) {
+          btnBuscar.click();
+        }
+      };
     });
     return;
   }
@@ -850,6 +1126,7 @@ function render(form = null, alerta = "") {
         <div style="margin-bottom: 16px">
           <button onclick="modoListaCompras = !modoListaCompras; render()">${modoListaCompras ? 'Ver Inventario' : 'Ver Lista de Compras'}</button>
           <button onclick="modoMenu = true; render()">Ver Menú</button>
+          <button onclick="modoRecetasEnsaladas = true; render()">Recetas de Ensaladas</button>
           <button onclick="limpiarProductos()" style="background: #e53e3e">Limpiar Todo</button>
         </div>
 
@@ -1081,3 +1358,221 @@ limpiarProductos()
   .then(() => precargarLacteos())
   .then(() => precargarLegumbres())
   .then(() => render());
+
+       // Función para generar receta con Google Gemini API
+       async function generarRecetaGemini(ingredientes, apiKey) {
+         console.log('Iniciando generación de ensaladas con ingredientes:', ingredientes);
+         console.log('API key (primeros 10 chars):', apiKey.substring(0, 10) + '...');
+         
+         const prompt = `Genera 10 recetas de ensaladas creativas y variadas usando estos ingredientes: ${ingredientes}.
+
+Responde en formato JSON con esta estructura exacta:
+{
+  "ensaladas": [
+    {
+      "titulo": "Nombre creativo de la ensalada 1",
+      "ingredientes": ["ingrediente 1", "ingrediente 2", "ingrediente 3", "aceite de oliva", "sal", "pimienta"],
+      "pasos": ["Paso 1 detallado", "Paso 2 detallado", "Paso 3 detallado"],
+      "nutricion": "Información nutricional breve y útil",
+      "consejos": ["Consejo 1", "Consejo 2", "Consejo 3"]
+    },
+    {
+      "titulo": "Nombre creativo de la ensalada 2",
+      "ingredientes": ["ingrediente 1", "ingrediente 2", "ingrediente 3", "aceite de oliva", "sal", "pimienta"],
+      "pasos": ["Paso 1 detallado", "Paso 2 detallado", "Paso 3 detallado"],
+      "nutricion": "Información nutricional breve y útil",
+      "consejos": ["Consejo 1", "Consejo 2", "Consejo 3"]
+    }
+  ]
+}
+
+Asegúrate de:
+- Generar exactamente 10 ensaladas diferentes y variadas
+- Incluir los ingredientes principales proporcionados en cada ensalada
+- Agregar ingredientes básicos como aceite, sal, pimienta, vinagre
+- Hacer los pasos específicos y fáciles de seguir
+- Incluir información nutricional realista
+- Dar consejos útiles para la preparación
+- Variar los estilos: mediterránea, asiática, mexicana, griega, etc.
+- Incluir diferentes tipos de aderezos y combinaciones
+- Responder SOLO el JSON, sin texto adicional`;
+
+         console.log('Enviando petición a Gemini API para ensaladas...');
+         
+         const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+           method: 'POST',
+           headers: {
+             'Content-Type': 'application/json',
+           },
+           body: JSON.stringify({
+             contents: [{
+               parts: [{
+                 text: prompt
+               }]
+             }]
+           })
+         });
+
+         console.log('Respuesta recibida para ensaladas, status:', response.status);
+         
+         if (!response.ok) {
+           const errorData = await response.text();
+           console.error('Error de API para ensaladas:', response.status, errorData);
+           throw new Error(`Error de API: ${response.status}`);
+         }
+
+         console.log('Parseando respuesta JSON para ensaladas...');
+         const data = await response.json();
+         console.log('Respuesta parseada para ensaladas:', data);
+         
+         const ensaladasText = data.candidates[0].content.parts[0].text;
+         console.log('Texto de ensaladas recibido:', ensaladasText);
+         
+         // Extraer JSON de la respuesta
+         const jsonMatch = ensaladasText.match(/\{[\s\S]*\}/);
+         if (!jsonMatch) {
+           console.error('No se encontró JSON en la respuesta de las ensaladas:', ensaladasText);
+           throw new Error('No se pudo parsear la respuesta de la IA');
+         }
+         
+         console.log('JSON extraído de las ensaladas:', jsonMatch[0]);
+         const resultado = JSON.parse(jsonMatch[0]);
+         console.log('Ensaladas parseadas:', resultado);
+         
+         // Validar estructura
+         if (!resultado.ensaladas || !Array.isArray(resultado.ensaladas) || resultado.ensaladas.length === 0) {
+           console.error('Estructura de ensaladas incompleta:', resultado);
+           throw new Error('Respuesta de IA incompleta');
+         }
+         
+         // Validar cada ensalada
+         for (let i = 0; i < resultado.ensaladas.length; i++) {
+           const ensalada = resultado.ensaladas[i];
+           if (!ensalada.titulo || !ensalada.ingredientes || !ensalada.pasos || !ensalada.nutricion || !ensalada.consejos) {
+             console.error(`Ensalada ${i + 1} incompleta:`, ensalada);
+             throw new Error(`Ensalada ${i + 1} incompleta en la respuesta de IA`);
+           }
+         }
+         
+         console.log('Ensaladas validadas correctamente');
+         return resultado.ensaladas;
+       }
+       
+       // Función para generar plato con Google Gemini API
+       async function generarPlatoGemini(ingredientes, apiKey) {
+         console.log('Iniciando generación de platos con ingredientes:', ingredientes);
+         console.log('API key (primeros 10 chars):', apiKey.substring(0, 10) + '...');
+         
+         const prompt = `Genera 10 recetas de platos principales creativos y variados usando estos ingredientes: ${ingredientes}.
+
+Responde en formato JSON con esta estructura exacta:
+{
+  "platos": [
+    {
+      "titulo": "Nombre creativo del plato 1",
+      "ingredientes": ["ingrediente 1", "ingrediente 2", "ingrediente 3", "aceite de oliva", "sal", "pimienta"],
+      "pasos": ["Paso 1 detallado", "Paso 2 detallado", "Paso 3 detallado"],
+      "nutricion": "Información nutricional breve y útil",
+      "consejos": ["Consejo 1", "Consejo 2", "Consejo 3"],
+      "tiempo_preparacion": "Tiempo estimado de preparación",
+      "dificultad": "Nivel de dificultad (Fácil/Medio/Difícil)"
+    },
+    {
+      "titulo": "Nombre creativo del plato 2",
+      "ingredientes": ["ingrediente 1", "ingrediente 2", "ingrediente 3", "aceite de oliva", "sal", "pimienta"],
+      "pasos": ["Paso 1 detallado", "Paso 2 detallado", "Paso 3 detallado"],
+      "nutricion": "Información nutricional breve y útil",
+      "consejos": ["Consejo 1", "Consejo 2", "Consejo 3"],
+      "tiempo_preparacion": "Tiempo estimado de preparación",
+      "dificultad": "Nivel de dificultad (Fácil/Medio/Difícil)"
+    }
+  ]
+}
+
+Asegúrate de:
+- Generar exactamente 10 platos diferentes y variados
+- Incluir los ingredientes principales proporcionados en cada plato
+- Agregar ingredientes básicos como aceite, sal, pimienta, especias
+- Hacer los pasos específicos y fáciles de seguir
+- Incluir información nutricional realista
+- Dar consejos útiles para la preparación
+- Incluir tiempo de preparación y dificultad
+- Variar los estilos: italiano, mexicano, asiático, mediterráneo, etc.
+- Responder SOLO el JSON, sin texto adicional`;
+
+         console.log('Enviando petición a Gemini API para platos...');
+         
+         const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+           method: 'POST',
+           headers: {
+             'Content-Type': 'application/json',
+           },
+           body: JSON.stringify({
+             contents: [{
+               parts: [{
+                 text: prompt
+               }]
+             }]
+           })
+         });
+
+         console.log('Respuesta recibida para platos, status:', response.status);
+         
+         if (!response.ok) {
+           const errorData = await response.text();
+           console.error('Error de API para platos:', response.status, errorData);
+           throw new Error(`Error de API: ${response.status}`);
+         }
+
+         console.log('Parseando respuesta JSON para platos...');
+         const data = await response.json();
+         console.log('Respuesta parseada para platos:', data);
+         
+         const platosText = data.candidates[0].content.parts[0].text;
+         console.log('Texto de platos recibido:', platosText);
+         
+         // Extraer JSON de la respuesta
+         const jsonMatch = platosText.match(/\{[\s\S]*\}/);
+         if (!jsonMatch) {
+           console.error('No se encontró JSON en la respuesta de los platos:', platosText);
+           throw new Error('No se pudo parsear la respuesta de la IA');
+         }
+         
+         console.log('JSON extraído de los platos:', jsonMatch[0]);
+         const resultado = JSON.parse(jsonMatch[0]);
+         console.log('Platos parseados:', resultado);
+         
+         // Validar estructura
+         if (!resultado.platos || !Array.isArray(resultado.platos) || resultado.platos.length === 0) {
+           console.error('Estructura de platos incompleta:', resultado);
+           throw new Error('Respuesta de IA incompleta');
+         }
+         
+         // Validar cada plato
+         for (let i = 0; i < resultado.platos.length; i++) {
+           const plato = resultado.platos[i];
+           if (!plato.titulo || !plato.ingredientes || !plato.pasos || !plato.nutricion || !plato.consejos || !plato.tiempo_preparacion || !plato.dificultad) {
+             console.error(`Plato ${i + 1} incompleto:`, plato);
+             throw new Error(`Plato ${i + 1} incompleto en la respuesta de IA`);
+           }
+         }
+         
+         console.log('Platos validados correctamente');
+         return resultado.platos;
+       }
+       
+       // Función para generar nueva receta
+       window.generarNuevaRecetaIA = function() {
+         const btnBuscar = document.getElementById("btn-buscar-receta");
+         if (btnBuscar) {
+           btnBuscar.click();
+         }
+       };
+       
+       // Función para generar nuevo plato
+       window.generarNuevoPlatoIA = function() {
+         const btnGenerarPlatoIA = document.getElementById("btn-generar-plato-ia");
+         if (btnGenerarPlatoIA) {
+           btnGenerarPlatoIA.click();
+         }
+       };
