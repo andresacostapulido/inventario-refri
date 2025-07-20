@@ -8,6 +8,133 @@ const CATEGORIAS = [
   "Otros"
 ];
 
+// --- Funciones de seguridad para API key ---
+function encriptarTexto(texto, contraseña) {
+  // Función simple de encriptación usando la contraseña como clave
+  let resultado = '';
+  for (let i = 0; i < texto.length; i++) {
+    const charCode = texto.charCodeAt(i) ^ contraseña.charCodeAt(i % contraseña.length);
+    resultado += String.fromCharCode(charCode);
+  }
+  return btoa(resultado); // Codificar en base64
+}
+
+function desencriptarTexto(textoEncriptado, contraseña) {
+  try {
+    const texto = atob(textoEncriptado); // Decodificar base64
+    let resultado = '';
+    for (let i = 0; i < texto.length; i++) {
+      const charCode = texto.charCodeAt(i) ^ contraseña.charCodeAt(i % contraseña.length);
+      resultado += String.fromCharCode(charCode);
+    }
+    return resultado;
+  } catch (error) {
+    return null;
+  }
+}
+
+function guardarAPIKeySegura(apiKey, contraseña) {
+  const apiKeyEncriptada = encriptarTexto(apiKey, contraseña);
+  localStorage.setItem('api_key_encriptada', apiKeyEncriptada);
+  localStorage.setItem('api_key_hash', btoa(contraseña)); // Hash simple de la contraseña
+}
+
+function obtenerAPIKeySegura(contraseña) {
+  const apiKeyEncriptada = localStorage.getItem('api_key_encriptada');
+  const hashGuardado = localStorage.getItem('api_key_hash');
+  
+  if (!apiKeyEncriptada || !hashGuardado) {
+    return null;
+  }
+  
+  // Verificar contraseña
+  if (btoa(contraseña) !== hashGuardado) {
+    return null;
+  }
+  
+  return desencriptarTexto(apiKeyEncriptada, contraseña);
+}
+
+function tieneAPIKeyGuardada() {
+  return localStorage.getItem('api_key_encriptada') !== null;
+}
+
+function limpiarAPIKey() {
+  localStorage.removeItem('api_key_encriptada');
+  localStorage.removeItem('api_key_hash');
+}
+
+// Función para configurar API key por primera vez
+window.configurarAPIKey = function() {
+  const apiKey = prompt('Ingresa tu API key de Google Gemini:');
+  if (!apiKey) return;
+  
+  if (apiKey.length < 20) {
+    alert('La API key parece ser muy corta. Verifica que sea una clave válida de Google Gemini.');
+    return;
+  }
+  
+  const contraseña = prompt('Crea una contraseña para proteger tu API key:');
+  if (!contraseña) return;
+  
+  if (contraseña.length < 4) {
+    alert('La contraseña debe tener al menos 4 caracteres.');
+    return;
+  }
+  
+  const confirmarContraseña = prompt('Confirma tu contraseña:');
+  if (contraseña !== confirmarContraseña) {
+    alert('Las contraseñas no coinciden.');
+    return;
+  }
+  
+  guardarAPIKeySegura(apiKey, contraseña);
+  alert('✅ API key configurada correctamente. Ya no necesitarás ingresarla cada vez.');
+};
+
+// Función para cambiar API key
+window.cambiarAPIKey = function() {
+  const contraseña = prompt('Ingresa tu contraseña actual:');
+  if (!contraseña) return;
+  
+  const apiKeyActual = obtenerAPIKeySegura(contraseña);
+  if (!apiKeyActual) {
+    alert('❌ Contraseña incorrecta.');
+    return;
+  }
+  
+  const nuevaAPIKey = prompt('Ingresa tu nueva API key de Google Gemini:');
+  if (!nuevaAPIKey) return;
+  
+  if (nuevaAPIKey.length < 20) {
+    alert('La API key parece ser muy corta. Verifica que sea una clave válida de Google Gemini.');
+    return;
+  }
+  
+  const nuevaContraseña = prompt('Ingresa tu contraseña (o la misma si no quieres cambiarla):');
+  if (!nuevaContraseña) return;
+  
+  guardarAPIKeySegura(nuevaAPIKey, nuevaContraseña);
+  alert('✅ API key actualizada correctamente.');
+};
+
+// Función para eliminar API key
+window.eliminarAPIKey = function() {
+  const contraseña = prompt('Ingresa tu contraseña para confirmar:');
+  if (!contraseña) return;
+  
+  const apiKeyActual = obtenerAPIKeySegura(contraseña);
+  if (!apiKeyActual) {
+    alert('❌ Contraseña incorrecta.');
+    return;
+  }
+  
+  if (confirm('¿Estás seguro de que quieres eliminar tu API key guardada?')) {
+    limpiarAPIKey();
+    alert('✅ API key eliminada. Tendrás que configurarla nuevamente.');
+  }
+};
+
 // --- Utilidades IndexedDB ---
 function abrirDB() {
   return new Promise((resolve, reject) => {
@@ -816,17 +943,27 @@ function render(form = null, alerta = "") {
             return;
           }
           
-          // Solicitar API key
-          const apiKey = prompt('Por favor, ingresa tu API key de Google Gemini:');
-          if (!apiKey) {
-            alert('Se necesita una API key para generar platos con IA');
-            return;
-          }
-          
-          // Validar formato básico de API key
-          if (apiKey.length < 20) {
-            alert('La API key parece ser muy corta. Verifica que sea una clave válida de Google Gemini.');
-            return;
+          // Verificar si hay API key guardada
+          let apiKey = null;
+          if (tieneAPIKeyGuardada()) {
+            const contraseña = prompt('Ingresa tu contraseña para acceder a la API key:');
+            if (contraseña) {
+              apiKey = obtenerAPIKeySegura(contraseña);
+              if (!apiKey) {
+                alert('❌ Contraseña incorrecta. Intenta de nuevo.');
+                return;
+              }
+            } else {
+              return; // Usuario canceló
+            }
+          } else {
+            // No hay API key guardada, configurar por primera vez
+            if (confirm('No tienes una API key configurada. ¿Quieres configurarla ahora?')) {
+              configurarAPIKey();
+              return; // El usuario configurará la API key
+            } else {
+              return;
+            }
           }
           
           btnGenerarPlatoIA.textContent = '🤖 Generando plato...';
@@ -968,17 +1105,27 @@ function render(form = null, alerta = "") {
             return;
           }
           
-          // Solicitar API key cada vez
-          const apiKey = prompt('Por favor, ingresa tu API key de Google Gemini:');
-          if (!apiKey) {
-            alert('Se necesita una API key para generar recetas con IA');
-            return;
-          }
-          
-          // Validar formato básico de API key
-          if (apiKey.length < 20) {
-            alert('La API key parece ser muy corta. Verifica que sea una clave válida de Google Gemini.');
-            return;
+          // Verificar si hay API key guardada
+          let apiKey = null;
+          if (tieneAPIKeyGuardada()) {
+            const contraseña = prompt('Ingresa tu contraseña para acceder a la API key:');
+            if (contraseña) {
+              apiKey = obtenerAPIKeySegura(contraseña);
+              if (!apiKey) {
+                alert('❌ Contraseña incorrecta. Intenta de nuevo.');
+                return;
+              }
+            } else {
+              return; // Usuario canceló
+            }
+          } else {
+            // No hay API key guardada, configurar por primera vez
+            if (confirm('No tienes una API key configurada. ¿Quieres configurarla ahora?')) {
+              configurarAPIKey();
+              return; // El usuario configurará la API key
+            } else {
+              return;
+            }
           }
           
           btnBuscar.textContent = '🤖 Generando receta...';
@@ -1103,6 +1250,17 @@ function render(form = null, alerta = "") {
     root.innerHTML = `
         <h1>Inventario del Refrigerador</h1>
         ${alerta ? `<div class="alert">${alerta}</div>` : ''}
+        
+        <div style="margin-bottom:16px;padding:12px;background:#f7fafc;border-radius:6px;border:1px solid #e2e8f0">
+          <strong>🔐 Gestión de API Key:</strong>
+          ${tieneAPIKeyGuardada() ? 
+            '<span style="color:#38a169">✅ Configurada</span> | ' +
+            '<button onclick="cambiarAPIKey()" style="background:#3182ce;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:12px">Cambiar</button> | ' +
+            '<button onclick="eliminarAPIKey()" style="background:#e53e3e;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:12px">Eliminar</button>' :
+            '<span style="color:#e53e3e">❌ No configurada</span> | ' +
+            '<button onclick="configurarAPIKey()" style="background:#38a169;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:12px">Configurar</button>'
+          }
+        </div>
         
         <form id="form-producto" class="form-group">
           <input type="text" id="nombre" placeholder="Nombre del producto" value="${editId ? (productos.find(p => p.id === editId)?.nombre || '') : ''}" required>
