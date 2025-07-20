@@ -4,7 +4,7 @@ const CATEGORIAS = [
   "Verduras",
   "Frutas",
   "Proteinas",
-  "Bebidas",
+  "Legumbres",
   "Otros"
 ];
 
@@ -65,7 +65,7 @@ function diasRestantes(fechaCaducidad) {
 
 // --- Precarga de verduras si la base está vacía ---
 const VERDURAS_PREDEFINIDAS = [
-  "achicoria", "apio", "repollo", "zapallo italiano", "acelga cruda", "espinaca cruda", "lechuga", "pepino ensalada", "rabanito", "tomate", "acelga cocida", "alcachofa", "betarraga", "cebolla", "coliflor", "brócoli", "kale", "espárragos", "espinaca cocida", "champiñones", "porotos verdes", "zanahoria", "zapallito italiano cocido", "palmitos"
+  "achicoria", "apio", "repollo", "zapallo italiano", "acelga cruda", "espinaca cruda", "lechuga", "pepino ensalada", "rabanito", "tomate", "acelga cocida", "alcachofa", "betarraga", "cebolla", "coliflor", "brócoli", "kale", "espárragos", "espinaca cocida", "champiñones", "porotos verdes", "zanahoria", "zapallito italiano cocido", "palmitos", "palta"
 ];
 
 function precargarVerduras() {
@@ -170,7 +170,7 @@ function migrarCarnesAProteinas() {
 }
 
 // Precarga de proteinas si la base está vacía de ellas
-const PROTEINAS_PREDEFINIDAS = ["carne", "pollo", "cerdo", "pescado"];
+const PROTEINAS_PREDEFINIDAS = ["carne", "pollo", "cerdo", "pescado", "atún"];
 function precargarProteinas() {
   return obtenerProductos().then(productos => {
     const yaExisten = productos.filter(p => p.categoria === "Proteinas").map(p => p.nombre);
@@ -207,6 +207,71 @@ function precargarLacteos() {
   });
 }
 
+// Migrar 'Bebidas' a 'Legumbres' en productos existentes
+function migrarBebidasALegumbres() {
+  return obtenerProductos().then(productos => {
+    return Promise.all(productos.map(prod => {
+      if (prod.categoria === 'Bebidas') {
+        prod.categoria = 'Legumbres';
+        return guardarProducto(prod);
+      }
+      return Promise.resolve();
+    }));
+  });
+}
+// Precarga de legumbres si la base está vacía de ellas
+const LEGUMBRES_PREDEFINIDAS = ["porotos negros", "lentejas", "arroz"];
+function precargarLegumbres() {
+  return obtenerProductos().then(productos => {
+    const yaExisten = productos.filter(p => p.categoria === "Legumbres").map(p => p.nombre);
+    const nuevas = LEGUMBRES_PREDEFINIDAS.filter(nombre => !yaExisten.includes(nombre));
+    if (nuevas.length > 0) {
+      return Promise.all(
+        nuevas.map(nombre => guardarProducto({
+          nombre,
+          categoria: "Legumbres",
+          cantidad: 0,
+          fechaCompra: ""
+        }))
+      );
+    }
+  });
+}
+
+// Platos de ejemplo para el menú
+const PLATOS = [
+  {
+    nombre: "Almuerzo Proteico",
+    ingredientes: ["proteinas", "legumbres", "verduras", "frutas"],
+    pasos: [
+      "Cocina las verduras al vapor o salteadas con un poco de aceite y sal.",
+      "Cocina la proteína (carne, pollo, atún, etc.) a la plancha o hervida.",
+      "Prepara la legumbre (lentejas, porotos, etc.) según corresponda.",
+      "Sirve todo junto y acompaña con fruta fresca."
+    ]
+  },
+  {
+    nombre: "Legumbres con Verduras",
+    ingredientes: ["legumbres", "verduras"],
+    pasos: [
+      "Cocina las legumbres con agua, sal y un poco de aceite.",
+      "Añade las verduras picadas y cocina hasta que estén blandas.",
+      "Sirve caliente."
+    ]
+  },
+  {
+    nombre: "Pescado con Arroz",
+    ingredientes: ["proteinas", "verduras", "arroz", "frutas"],
+    pasos: [
+      "Cocina el pescado a la plancha con un poco de aceite y sal.",
+      "Cocina el arroz y las verduras al vapor.",
+      "Sirve el pescado acompañado del arroz, verduras y fruta."
+    ]
+  }
+];
+
+let modoMenu = false;
+
 // --- Renderizado y lógica de la app ---
 const root = document.getElementById("root");
 let editId = null;
@@ -224,6 +289,45 @@ function render(form = null, alerta = "") {
     busquedaHadFocus = true;
     cursorStart = busquedaInput.selectionStart;
     cursorEnd = busquedaInput.selectionEnd;
+  }
+  if (modoMenu) {
+    obtenerProductos().then(productos => {
+      root.innerHTML = `
+        <h1>Menú de Platos</h1>
+        <button id="btn-volver">Volver al inventario</button>
+        <div style="margin-top:24px">
+          ${PLATOS.map(plato => {
+            return `
+              <div style="margin-bottom:32px;padding:16px;border:1px solid #e2e8f0;border-radius:8px;background:#f9fafb">
+                <h2 style="margin:0 0 8px 0">${plato.nombre}</h2>
+                <strong>Ingredientes principales:</strong>
+                <ul>
+                  ${plato.ingredientes.map(cat => {
+                    const disponibles = productos.filter(p => p.categoria.toLowerCase() === cat.toLowerCase() && p.cantidad > 0).map(p => p.nombre);
+                    const falta = disponibles.length === 0;
+                    return `<li style="color:${falta ? '#e53e3e' : '#222'}">${cat}${falta ? ' (falta)' : ''}
+                      ${disponibles.length > 0 ? `<div style='color:#38a169;font-size:0.95em'>Tienes: ${disponibles.join(", ")}</div>` : ''}
+                    </li>`;
+                  }).join("")}
+                </ul>
+                <strong>Preparación:</strong>
+                <ol>
+                  ${plato.pasos.map(paso => `<li>${paso}</li>`).join("")}
+                </ol>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+      const btnVolver = document.getElementById("btn-volver");
+      if (btnVolver) {
+        btnVolver.onclick = function() {
+          modoMenu = false;
+          render();
+        };
+      }
+    });
+    return;
   }
   obtenerProductos().then(productos => {
     // Determinar la categoría seleccionada
@@ -247,6 +351,7 @@ function render(form = null, alerta = "") {
     root.innerHTML = `
       <h1>Inventario de Refrigerador</h1>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <button id="btn-menu">Menú</button>
         <button id="btn-lista" ${modoListaCompras ? 'disabled' : ''}>Lista de compras</button>
         <input id="busqueda" placeholder="Buscar producto..." value="${textoBusqueda}" style="flex:1;max-width:200px" />
       </div>
@@ -429,6 +534,14 @@ function render(form = null, alerta = "") {
         render({ categoria: catSel });
       };
     });
+    // Asignar evento al botón Menú
+    const btnMenu = document.getElementById("btn-menu");
+    if (btnMenu) {
+      btnMenu.addEventListener('click', function() {
+        modoMenu = true;
+        render();
+      });
+    }
   });
 }
 
@@ -467,8 +580,10 @@ function limpiarProductos() {
 // Inicializar
 limpiarProductos()
   .then(() => migrarCarnesAProteinas())
+  .then(() => migrarBebidasALegumbres())
   .then(() => precargarVerduras())
   .then(() => precargarFrutas())
   .then(() => precargarProteinas())
   .then(() => precargarLacteos())
+  .then(() => precargarLegumbres())
   .then(() => render()); 
