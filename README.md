@@ -1,294 +1,284 @@
-# 🍽️ Inventario y Menús
+# 🍽️ Inventario Refri v2.0
 
-Una aplicación web moderna y completa para gestionar el inventario de tu refrigerador con funcionalidades avanzadas de Inteligencia Artificial para generar recetas personalizadas.
+Una aplicación web moderna para gestionar el inventario de tu refrigerador con generación de recetas usando Inteligencia Artificial.
 
-![Inventario del Refrigerador](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
-![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)
-![AI](https://img.shields.io/badge/AI-Google%20Gemini-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
+## ✨ Características
 
-## ✨ Características Principales
+### 🔐 Seguridad Mejorada
+- **Encriptación AES-256**: Reemplaza la encriptación XOR anterior con estándares de seguridad modernos
+- **PBKDF2**: Derivación segura de claves con 10,000 iteraciones
+- **Validación de contraseñas**: Verificación de fortaleza con múltiples criterios
+- **Protección de API Keys**: Almacenamiento seguro de claves de Google Gemini
 
-### 📦 Gestión de Inventario
-- **CRUD completo** de productos (Crear, Leer, Actualizar, Eliminar)
-- **Categorización inteligente** (Lácteos, Verduras, Frutas, Proteínas, Legumbres, Otros)
-- **Búsqueda en tiempo real** de productos
-- **Filtrado por categorías** y estado
-- **Alertas de caducidad** automáticas
-- **Cantidades y unidades** personalizables
+### 🚀 Rendimiento Optimizado
+- **Cache en memoria**: Reducción de consultas a IndexedDB
+- **Rate limiting**: Control de uso de API para evitar excesos
+- **Carga diferida**: Optimización de recursos y componentes
+- **Compresión de datos**: Almacenamiento eficiente
 
-### 🤖 Inteligencia Artificial
-- **Generación de recetas** con Google Gemini AI
-- **10 platos variados** por consulta (italiano, mexicano, asiático, mediterráneo, etc.)
-- **10 ensaladas variadas** por consulta (mediterránea, asiática, mexicana, griega, etc.)
-- **Recetas personalizadas** basadas en tu inventario
-- **Información nutricional** detallada
-- **Consejos de preparación** de la IA
-- **Tiempo de preparación** y nivel de dificultad
+### 🎨 Experiencia de Usuario Moderna
+- **Modo oscuro/claro**: Tema adaptable con persistencia
+- **Diseño responsive**: Funciona perfectamente en móviles y desktop
+- **Notificaciones toast**: Feedback visual inmediato
+- **Iconos modernos**: Interfaz intuitiva con Lucide React
+- **Navegación mejorada**: Menú móvil y navegación por pestañas
 
-### 🔐 Seguridad Avanzada
-- **API key encriptada** localmente
-- **Protección con contraseña** personal
-- **Nunca se expone** en el código fuente
-- **Gestión completa** (configurar, cambiar, eliminar)
-- **Almacenamiento seguro** en localStorage
+### 📊 Gestión de Datos Avanzada
+- **Exportar/Importar**: Backup y restauración de datos
+- **Filtros avanzados**: Búsqueda por nombre, categoría, estado
+- **Estadísticas en tiempo real**: Resumen visual del inventario
+- **Ordenamiento múltiple**: Por nombre, categoría, cantidad, caducidad
+- **Indicadores visuales**: Estados de caducidad y stock
 
-### 🎨 Interfaz Moderna
-- **Diseño responsive** (móvil, tablet, desktop)
-- **Interfaz intuitiva** y fácil de usar
-- **Iconos descriptivos** para mejor UX
-- **Modal elegante** para recetas generadas
-- **Navegación fluida** entre secciones
+### 🤖 IA Integrada
+- **Google Gemini API**: Generación de recetas con IA avanzada
+- **Recetas variadas**: Ensaladas y platos principales
+- **Prompt engineering**: Prompts optimizados para mejores resultados
+- **Manejo de errores**: Gestión robusta de fallos de API
+- **Estadísticas de uso**: Monitoreo de consumo de API
 
-### 💾 Almacenamiento Local
-- **IndexedDB** para datos persistentes
-- **localStorage** para configuración
-- **Sin necesidad de servidor** externo
-- **Funciona offline** completamente
-- **Datos privados** en tu dispositivo
+## 🛠️ Tecnologías
 
-## 🚀 Instalación y Uso
-
-### Requisitos Previos
-- Navegador web moderno (Chrome, Firefox, Safari, Edge)
-- API key de Google Gemini (gratuita)
-
-### Pasos de Instalación
-
-1. **Clona el repositorio:**
-   ```bash
-   git clone https://github.com/tu-usuario/inventario-refrigerador.git
-   cd inventario-refrigerador
-   ```
-
-2. **Abre la aplicación:**
-   - **Opción A:** Abre `dieta/index.html` directamente en tu navegador
-   - **Opción B:** Usa un servidor local:
-     ```bash
-     cd dieta
-     python -m http.server 8000
-     # Luego abre http://localhost:8000
-     ```
-
-3. **Configura tu API key:**
-   - Ve a [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Crea una nueva API key para Gemini
-   - En la aplicación, haz clic en "Configurar" en la sección de API Key
-   - Ingresa tu API key y crea una contraseña de protección
-
-## 📖 Guía de Uso
-
-### Gestión de Inventario
-
-#### Agregar Productos
-1. Completa el formulario con:
-   - **Nombre** del producto
-   - **Categoría** (selecciona la apropiada)
-   - **Cantidad** (opcional)
-   - **Unidad** (kg, unidades, etc.)
-2. Haz clic en "Agregar Producto"
-
-#### Editar Productos
-1. Haz clic en el icono ✏️ junto al producto
-2. Modifica los campos necesarios
-3. Haz clic en "Actualizar"
-
-#### Eliminar Productos
-1. Haz clic en el icono 🗑️ junto al producto
-2. Confirma la eliminación
-
-#### Buscar y Filtrar
-- Usa la **barra de búsqueda** para encontrar productos
-- Cambia de **categoría** para filtrar productos
-- Activa **"Solo con stock"** para ver productos disponibles
-
-### Generación de Recetas con IA
-
-#### Configuración Inicial
-1. Haz clic en "Configurar" en la sección de API Key
-2. Ingresa tu API key de Google Gemini
-3. Crea una contraseña para proteger tu API key
-4. Confirma la contraseña
-
-#### Generar Ensaladas
-1. Ve a la sección "Recetas de Ensaladas"
-2. Haz clic en "🤖 Generar Receta con IA"
-3. Ingresa tu contraseña cuando se solicite
-4. Recibe 10 ensaladas variadas con:
-   - Lista de ingredientes
-   - Pasos de preparación
-   - Información nutricional
-   - Consejos de la IA
-
-#### Generar Platos Principales
-1. Ve a la sección "Menú de Recetas"
-2. Haz clic en "🤖 Generar Plato con IA"
-3. Ingresa tu contraseña cuando se solicite
-4. Recibe 10 platos variados con:
-   - Tiempo de preparación
-   - Nivel de dificultad
-   - Ingredientes y pasos
-   - Información nutricional
-   - Consejos de la IA
-
-### Gestión de API Key
-
-#### Cambiar API Key
-1. Haz clic en "Cambiar" en la sección de API Key
-2. Ingresa tu contraseña actual
-3. Ingresa la nueva API key
-4. Confirma la nueva contraseña
-
-#### Eliminar API Key
-1. Haz clic en "Eliminar" en la sección de API Key
-2. Ingresa tu contraseña para confirmar
-3. Confirma la eliminación
-
-## 🛠️ Tecnologías Utilizadas
-
-### Frontend
-- **HTML5** - Estructura semántica
-- **CSS3** - Estilos modernos y responsive
-- **JavaScript ES6+** - Lógica de aplicación
-- **IndexedDB** - Base de datos local
-- **localStorage** - Almacenamiento de configuración
-
-### Inteligencia Artificial
-- **Google Gemini API** - Generación de recetas
-- **Modelo gemini-1.5-flash** - Respuestas rápidas y eficientes
-- **Encriptación XOR** - Protección de API key
-
-### Características Técnicas
-- **Aplicación SPA** (Single Page Application)
-- **Almacenamiento local** (sin servidor externo)
-- **Funcionamiento offline** completo
-- **Responsive design** con media queries
-- **Manejo de errores** robusto
+- **Frontend**: React 18 (via CDN)
+- **Estilos**: CSS moderno con variables y modo oscuro
+- **Base de datos**: IndexedDB v2 con múltiples stores
+- **Encriptación**: CryptoJS (AES-256, PBKDF2, SHA256)
+- **Iconos**: Lucide React
+- **Notificaciones**: React Hot Toast
+- **IA**: Google Gemini API
 
 ## 📁 Estructura del Proyecto
 
 ```
-inventario-refrigerador/
-├── dieta/
-│   ├── index.html          # Página principal
-│   ├── app.js             # Lógica principal de la aplicación
-│   └── style.css          # Estilos CSS
-├── README.md              # Este archivo
-└── .gitignore            # Archivos ignorados por Git
+inventario-refri/
+├── index.html          # Página principal con CDNs
+├── app.js              # Aplicación React principal
+├── utils.js            # Utilidades (encriptación, DB, API)
+├── style.css           # Estilos modernos y responsive
+└── README.md           # Documentación
 ```
 
-### Archivos Principales
+## 🚀 Instalación y Uso
 
-#### `index.html`
-- Estructura HTML principal
-- Meta tags para responsive design
-- Enlaces a CSS y JavaScript
+### Opción 1: Uso Directo (Recomendado)
+1. Descarga todos los archivos en una carpeta
+2. Abre `index.html` en tu navegador
+3. ¡Listo! No necesitas instalar nada
 
-#### `app.js`
-- Configuración de IndexedDB
-- Funciones CRUD para productos
-- Integración con Google Gemini API
-- Sistema de encriptación
-- Lógica de generación de recetas
-- Manejo de eventos y UI
-
-#### `style.css`
-- Estilos responsive
-- Diseño moderno y limpio
-- Media queries para móvil
-- Animaciones y transiciones
-
-## 🔐 Seguridad
-
-### Protección de API Key
-- **Encriptación XOR** con contraseña personal
-- **Codificación base64** para almacenamiento
-- **Verificación de contraseña** antes de desencriptar
-- **Nunca se expone** en el código fuente
-- **Almacenamiento local** (no se sube a servidores)
-
-### Privacidad de Datos
-- **Todos los datos** se almacenan localmente
-- **Sin tracking** o análisis externo
-- **Sin cookies** de terceros
-- **Control total** sobre tus datos
-
-## 🎯 Funcionalidades Avanzadas
-
-### Sistema de Menús
-- **Generación automática** de menús completos
-- **Combinaciones inteligentes** de ingredientes
-- **Filtrado por disponibilidad** de productos
-- **Regeneración** de menús con un clic
-
-### Gestión de Categorías
-- **6 categorías principales** predefinidas
-- **Productos pre-cargados** para cada categoría
-- **Migración automática** de categorías antiguas
-- **Filtrado dinámico** por categoría
-
-### Alertas y Notificaciones
-- **Cálculo automático** de días restantes
-- **Alertas visuales** para productos próximos a caducar
-- **Filtrado** por estado de caducidad
-- **Gestión proactiva** del inventario
-
-## 🚀 Despliegue
-
-### GitHub Pages (Recomendado)
-1. Sube tu código a GitHub
-2. Ve a Settings > Pages
-3. Selecciona la rama main
-4. Tu app estará disponible en `https://tu-usuario.github.io/inventario-refrigerador`
-
-### Servidor Local
+### Opción 2: Servidor Local
 ```bash
-cd dieta
+# Con Python 3
 python -m http.server 8000
-# Abre http://localhost:8000
+
+# Con Node.js (si lo tienes)
+npx serve .
+
+# Con PHP
+php -S localhost:8000
 ```
 
-### Otros Servidores
-- **Node.js:** `npx serve dieta`
-- **PHP:** `php -S localhost:8000 -t dieta`
-- **Cualquier servidor web** estático
+Luego abre `http://localhost:8000` en tu navegador.
+
+## 🔧 Configuración
+
+### 1. Configurar API Key de Google Gemini
+1. Ve a [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Crea una nueva API key gratuita
+3. En la app, ve a "Recetas IA" → "Configuración de API Key"
+4. Ingresa tu API key y una contraseña de protección
+5. ¡Ya puedes generar recetas con IA!
+
+### 2. Personalizar Configuración
+- **Tema**: Cambia entre modo claro y oscuro
+- **Datos**: Exporta/importa tu inventario
+- **API**: Gestiona tu configuración de IA
+
+## 📱 Funcionalidades
+
+### 📦 Gestión de Inventario
+- **Agregar productos**: Nombre, categoría, cantidad, fecha de caducidad
+- **Editar productos**: Modificar cualquier campo
+- **Eliminar productos**: Confirmación antes de eliminar
+- **Búsqueda y filtros**: Encuentra productos rápidamente
+- **Estadísticas**: Resumen visual del estado del inventario
+
+### 🤖 Generación de Recetas
+- **Ensaladas**: Recetas ligeras y saludables
+- **Platos principales**: Comidas completas y variadas
+- **Ingredientes disponibles**: Solo usa lo que tienes
+- **Información nutricional**: Datos de cada receta
+- **Exportar recetas**: Guarda tus recetas favoritas
+
+### ⚙️ Configuración
+- **Tema personalizable**: Claro/oscuro
+- **Backup de datos**: Exportar/importar inventario
+- **Gestión de API**: Configurar y proteger tu API key
+- **Estadísticas de uso**: Monitorear consumo de IA
+
+## 🔒 Seguridad
+
+### Encriptación
+- **AES-256**: Algoritmo de encriptación estándar
+- **PBKDF2**: Derivación segura de claves
+- **Salt único**: Para cada encriptación
+- **SHA256**: Hashing de contraseñas
+
+### Protección de Datos
+- **Almacenamiento local**: Tus datos nunca salen de tu dispositivo
+- **API key protegida**: Encriptada con tu contraseña
+- **Validación de entrada**: Prevención de datos maliciosos
+- **Rate limiting**: Protección contra abuso de API
+
+## 📊 Base de Datos
+
+### IndexedDB v2
+- **Store productos**: Inventario principal
+- **Store configuración**: Configuraciones de la app
+- **Store cache**: Cache para optimización
+- **Migraciones automáticas**: Actualización de esquemas
+
+### Estructura de Datos
+```javascript
+// Producto
+{
+  id: number,
+  nombre: string,
+  categoria: string,
+  cantidad: number,
+  unidad: string,
+  fechaCaducidad: string,
+  fechaCreacion: string
+}
+
+// Configuración
+{
+  key: string,
+  value: any,
+  timestamp: number
+}
+```
+
+## 🎨 Temas y Personalización
+
+### Modo Oscuro/Claro
+- **Detección automática**: Basada en preferencias del sistema
+- **Persistencia**: Recuerda tu preferencia
+- **Transiciones suaves**: Cambio visual fluido
+- **Accesibilidad**: Cumple estándares WCAG
+
+### Colores y Estilos
+- **Variables CSS**: Fácil personalización
+- **Diseño responsive**: Adaptable a cualquier pantalla
+- **Iconos consistentes**: Lucide React
+- **Tipografía moderna**: Sistema de fuentes optimizado
+
+## 🔧 Desarrollo
+
+### Estructura de Componentes
+- **App**: Componente principal
+- **ProductForm**: Formulario de productos
+- **ProductList**: Lista y filtros
+- **RecipeGenerator**: Generación de recetas
+- **Utils**: Utilidades compartidas
+
+### Patrones de Diseño
+- **Componentes funcionales**: React hooks
+- **Estado centralizado**: Gestión de datos
+- **Separación de responsabilidades**: Módulos especializados
+- **Error boundaries**: Manejo robusto de errores
+
+## 📈 Mejoras v2.0
+
+### Comparación con v1.0
+| Característica | v1.0 | v2.0 |
+|---|---|---|
+| Encriptación | XOR básica | AES-256 + PBKDF2 |
+| Framework | Vanilla JS | React 18 |
+| UI/UX | Básica | Moderna + responsive |
+| Cache | No | Memoria + IndexedDB |
+| Rate Limiting | No | Sí |
+| Modo Oscuro | No | Sí |
+| Export/Import | No | Sí |
+| Validación | Básica | Avanzada |
+| Error Handling | Básico | Robusto |
+| Performance | Básica | Optimizada |
+
+### Nuevas Funcionalidades
+- ✅ Encriptación AES-256
+- ✅ Modo oscuro/claro
+- ✅ Exportar/importar datos
+- ✅ Rate limiting para API
+- ✅ Cache en memoria
+- ✅ Validación avanzada
+- ✅ Diseño responsive
+- ✅ Notificaciones toast
+- ✅ Estadísticas en tiempo real
+- ✅ Filtros avanzados
+
+## 🐛 Solución de Problemas
+
+### Problemas Comunes
+
+**La app no carga**
+- Verifica que todos los archivos estén en la misma carpeta
+- Asegúrate de usar un navegador moderno (Chrome, Firefox, Safari, Edge)
+- Revisa la consola del navegador para errores
+
+**No se guardan los datos**
+- Verifica que IndexedDB esté habilitado
+- Limpia el caché del navegador
+- Intenta en modo incógnito
+
+**Error con la API de IA**
+- Verifica que tu API key sea válida
+- Asegúrate de tener saldo en tu cuenta de Google
+- Revisa la configuración de rate limiting
+
+**Problemas de rendimiento**
+- Cierra otras pestañas del navegador
+- Limpia el caché del navegador
+- Verifica que tengas suficiente memoria RAM
+
+### Logs y Debugging
+- Abre las herramientas de desarrollador (F12)
+- Revisa la consola para errores
+- Verifica la pestaña Application → Storage
+- Monitorea el uso de red en la pestaña Network
 
 ## 🤝 Contribuir
 
 ### Cómo Contribuir
-1. Haz un **fork** del repositorio
-2. Crea una **rama** para tu feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Haz **commit** de tus cambios (`git commit -am 'Agrega nueva funcionalidad'`)
-4. Haz **push** a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Crea un **Pull Request**
+1. Fork el proyecto
+2. Crea una rama para tu feature
+3. Haz tus cambios
+4. Prueba exhaustivamente
+5. Envía un pull request
 
-### Áreas de Mejora
-- [ ] Soporte para múltiples idiomas
-- [ ] Exportar/importar inventario
-- [ ] Estadísticas de uso
-- [ ] Más categorías de productos
-- [ ] Integración con otras APIs de recetas
-- [ ] Modo oscuro
-- [ ] Notificaciones push
+### Estándares de Código
+- Usa ES6+ features
+- Sigue las convenciones de React
+- Documenta funciones complejas
+- Mantén la compatibilidad con navegadores modernos
 
-## 📝 Licencia
+## 📄 Licencia
 
-Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+Este proyecto está bajo la Licencia MIT. Ver el archivo LICENSE para más detalles.
 
 ## 🙏 Agradecimientos
 
-- **Google Gemini** por proporcionar la API de IA
-- **Comunidad de desarrolladores** por las librerías y herramientas
-- **Usuarios** por el feedback y sugerencias
+- **Google Gemini**: Por proporcionar la API de IA gratuita
+- **React Team**: Por el framework increíble
+- **Lucide**: Por los iconos hermosos
+- **CryptoJS**: Por las utilidades de encriptación
+- **Comunidad open source**: Por todas las librerías utilizadas
 
 ## 📞 Soporte
 
 Si tienes problemas o sugerencias:
-
-1. **Issues:** Crea un issue en GitHub
-2. **Documentación:** Revisa este README
-3. **Código:** Revisa los comentarios en el código
+1. Revisa la sección de solución de problemas
+2. Busca en los issues existentes
+3. Crea un nuevo issue con detalles
 
 ---
 
-**¡Disfruta gestionando tu inventario y creando deliciosas recetas con IA! 🍽️🤖** 
+**¡Disfruta gestionando tu refrigerador con IA! 🍽️🤖** 

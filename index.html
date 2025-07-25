@@ -1,13 +1,981 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Inventario y Menús</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Refri - Gestión de Refrigerador con IA</title>
+    <meta name="description" content="Gestiona tu inventario de alimentos y genera recetas con IA usando Google Gemini">
+    <meta name="keywords" content="inventario, refrigerador, recetas, IA, Google Gemini">
+    <meta name="author" content="Inventario Refri">
+    
+    <!-- Favicon inline SVG -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
+    
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
     <div id="root"></div>
-    <script src="app.js"></script>
-  </body>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    
+    <!-- React y dependencias -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <!-- Utils Script -->
+    <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAdv8kYX6ojZp-SOctuiv4X-yZAsinRPl0",
+            authDomain: "autenticacion-98dbb.firebaseapp.com",
+            projectId: "autenticacion-98dbb",
+            storageBucket: "autenticacion-98dbb.firebasestorage.app",
+            messagingSenderId: "393896566390",
+            appId: "1:393896566390:web:970fa2fb679775302b0957",
+            databaseURL: "https://autenticacion-98dbb-default-rtdb.firebaseio.com"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+
+        // Configuración para optimizar uso gratuito de Firebase
+        // - 1GB almacenamiento
+        // - 10GB transferencia/mes
+        // - 100 conexiones simultáneas
+        // - Perfecto para uso personal
+
+        // Utils globales
+        window.Utils = {
+            // Autenticación
+            async signInWithGoogle() {
+                try {
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    const result = await auth.signInWithPopup(provider);
+                    return result.user;
+                } catch (error) {
+                    console.error('Error iniciando sesión con Google:', error);
+                    throw error;
+                }
+            },
+
+            async signOut() {
+                try {
+                    await auth.signOut();
+                    return true;
+                } catch (error) {
+                    console.error('Error cerrando sesión:', error);
+                    throw error;
+                }
+            },
+
+            getCurrentUser() {
+                return auth.currentUser;
+            },
+
+            onAuthStateChanged(callback) {
+                return auth.onAuthStateChanged(callback);
+            },
+
+            // Obtener ruta de usuario
+            getUserPath(userId = null) {
+                const user = userId || this.getCurrentUser();
+                const projectName = 'inventario-refri'; // Nombre del proyecto
+                if (user) {
+                    return `projects/${projectName}/users/${user.uid}`;
+                }
+                return `projects/${projectName}/guest`;
+            },
+
+            // Verificar si el usuario puede escribir datos
+            canWriteData() {
+                const user = this.getCurrentUser();
+                return user !== null;
+            },
+            // Configuración
+            async saveConfig(key, value) {
+                try {
+                    const userPath = this.getUserPath();
+                    await database.ref(`${userPath}/config/${key}`).set(value);
+                    return true;
+                } catch (error) {
+                    console.error('Error guardando configuración:', error);
+                    throw error;
+                }
+            },
+
+            async getConfig(key) {
+                try {
+                    const userPath = this.getUserPath();
+                    const snapshot = await database.ref(`${userPath}/config/${key}`).once('value');
+                    return snapshot.val();
+                } catch (error) {
+                    console.error('Error obteniendo configuración:', error);
+                    return null;
+                }
+            },
+
+            // Productos
+            async saveProducto(producto) {
+                try {
+                    if (!this.canWriteData()) {
+                        throw new Error('Debes iniciar sesión para guardar productos');
+                    }
+
+                    console.log('Guardando producto:', producto);
+                    console.log('ID del producto:', producto.id);
+                    
+                    if (!producto.id) {
+                        producto.id = Date.now().toString();
+                        producto.fechaCreacion = new Date().toISOString();
+                        console.log('Nuevo producto, ID generado:', producto.id);
+                    } else {
+                        console.log('Actualizando producto existente con ID:', producto.id);
+                    }
+                    producto.fechaActualizacion = new Date().toISOString();
+                    
+                    const userPath = this.getUserPath();
+                    await database.ref(`${userPath}/productos/${producto.id}`).set(producto);
+                    console.log('Producto guardado exitosamente en:', `${userPath}/productos/${producto.id}`);
+                    return producto.id;
+                } catch (error) {
+                    console.error('Error guardando producto:', error);
+                    throw error;
+                }
+            },
+
+            // Productos de ejemplo
+            async initializeSampleProducts() {
+                try {
+                    if (!this.canWriteData()) {
+                        console.log('Usuario no autenticado, no se pueden inicializar productos');
+                        return;
+                    }
+                    
+                    const userPath = this.getUserPath();
+                    const snapshot = await database.ref(`${userPath}/productos`).once('value');
+                    if (snapshot.exists() && Object.keys(snapshot.val()).length > 0) {
+                        console.log('Ya existen productos en la base de datos del usuario');
+                        return; // Ya hay productos, no inicializar
+                    }
+                    
+                    console.log('Inicializando productos base para el usuario...');
+                    
+                    console.log('Inicializando productos de ejemplo...');
+
+                    // Productos predefinidos por categoría
+                    const VERDURAS_PREDEFINIDAS = [
+                        "achicoria", "apio", "repollo", "zapallo italiano", "acelga cruda", "espinaca cruda", "lechuga", "pepino ensalada", "rabanito", "tomate", "acelga cocida", "alcachofa", "betarraga", "cebolla", "coliflor", "brócoli", "kale", "espárragos", "espinaca cocida", "champiñones", "porotos verdes", "zanahoria", "zapallito italiano cocido", "palmitos", "palta", "papas"
+                    ];
+
+                    const FRUTAS_PREDEFINIDAS = [
+                        "caqui", "manzana", "membrillo", "pera", "durazno", "naranja", "kiwi", "tuna", "higos", "mandarinas", "pepino dulce", "frutillas", "melón", "sandía", "frutos rojos", "arándanos", "plátano", "cerezas", "chirimoya", "damasco", "níspero", "piña", "uva"
+                    ];
+
+                    const PROTEINAS_PREDEFINIDAS = ["carne", "pollo", "cerdo", "pescado", "atún", "huevo"];
+
+                    const LACTEOS_PREDEFINIDOS = ["leche", "yogurt", "quesos", "crema de leche"];
+
+                    const LEGUMBRES_PREDEFINIDAS = ["porotos negros", "lentejas", "arroz", "fideos"];
+
+                    // Función para generar cantidad aleatoria (ahora siempre 0)
+                    const getRandomQuantity = (min, max) => 0;
+                    
+                    // Función para obtener unidad apropiada
+                    const getUnit = (producto) => {
+                        if (producto.includes("leche") || producto.includes("yogurt") || producto.includes("crema")) return "litros";
+                        if (producto.includes("queso")) return "g";
+                        if (producto.includes("carne") || producto.includes("pollo") || producto.includes("cerdo") || producto.includes("pescado")) return "kg";
+                        if (producto.includes("huevo")) return "unidades";
+                        if (producto.includes("arroz") || producto.includes("fideos") || producto.includes("lentejas") || producto.includes("porotos")) return "kg";
+                        if (producto.includes("melón") || producto.includes("sandía")) return "unidades";
+                        if (producto.includes("frutillas") || producto.includes("arándanos") || producto.includes("cerezas")) return "g";
+                        if (producto.includes("papas")) return "kg";
+                        if (producto.includes("palta")) return "unidades";
+                        return "unidades";
+                    };
+
+                    const sampleProducts = [];
+
+                    // Agregar verduras
+                    VERDURAS_PREDEFINIDAS.forEach((verdura, index) => {
+                        sampleProducts.push({
+                            id: `verdura_${index + 1}`,
+                            nombre: verdura.charAt(0).toUpperCase() + verdura.slice(1),
+                            categoria: "Verduras",
+                            cantidad: getRandomQuantity(1, 5),
+                            unidad: getUnit(verdura),
+                            fechaCreacion: new Date().toISOString(),
+                            fechaActualizacion: new Date().toISOString()
+                        });
+                    });
+
+                    // Agregar frutas
+                    FRUTAS_PREDEFINIDAS.forEach((fruta, index) => {
+                        sampleProducts.push({
+                            id: `fruta_${index + 1}`,
+                            nombre: fruta.charAt(0).toUpperCase() + fruta.slice(1),
+                            categoria: "Frutas",
+                            cantidad: getRandomQuantity(1, 8),
+                            unidad: getUnit(fruta),
+                            fechaCreacion: new Date().toISOString(),
+                            fechaActualizacion: new Date().toISOString()
+                        });
+                    });
+
+                    // Agregar proteínas
+                    PROTEINAS_PREDEFINIDAS.forEach((proteina, index) => {
+                        sampleProducts.push({
+                            id: `proteina_${index + 1}`,
+                            nombre: proteina.charAt(0).toUpperCase() + proteina.slice(1),
+                            categoria: "Proteínas",
+                            cantidad: getRandomQuantity(1, 3),
+                            unidad: getUnit(proteina),
+                            fechaCreacion: new Date().toISOString(),
+                            fechaActualizacion: new Date().toISOString()
+                        });
+                    });
+
+                    // Agregar lácteos
+                    LACTEOS_PREDEFINIDOS.forEach((lacteo, index) => {
+                        sampleProducts.push({
+                            id: `lacteo_${index + 1}`,
+                            nombre: lacteo.charAt(0).toUpperCase() + lacteo.slice(1),
+                            categoria: "Lácteos",
+                            cantidad: getRandomQuantity(1, 4),
+                            unidad: getUnit(lacteo),
+                            fechaCreacion: new Date().toISOString(),
+                            fechaActualizacion: new Date().toISOString()
+                        });
+                    });
+
+                    // Agregar legumbres
+                    LEGUMBRES_PREDEFINIDAS.forEach((legumbre, index) => {
+                        sampleProducts.push({
+                            id: `legumbre_${index + 1}`,
+                            nombre: legumbre.charAt(0).toUpperCase() + legumbre.slice(1),
+                            categoria: "Legumbres",
+                            cantidad: getRandomQuantity(1, 2),
+                            unidad: getUnit(legumbre),
+                            fechaCreacion: new Date().toISOString(),
+                            fechaActualizacion: new Date().toISOString()
+                        });
+                    });
+
+                    // Guardar productos de ejemplo
+                    for (const producto of sampleProducts) {
+                        await database.ref(`${userPath}/productos/${producto.id}`).set(producto);
+                    }
+
+                    console.log(`${sampleProducts.length} productos base inicializados para el usuario`);
+                } catch (error) {
+                    console.error('Error inicializando productos de ejemplo:', error);
+                }
+            },
+
+            // Limpiar base de datos completamente
+            async clearDatabase() {
+                try {
+                    if (!this.canWriteData()) {
+                        throw new Error('Debes iniciar sesión para limpiar la base de datos');
+                    }
+                    
+                    console.log('Limpiando base de datos completamente...');
+                    
+                    // Limpiar solo los datos del usuario actual
+                    const userPath = this.getUserPath();
+                    await database.ref(userPath).remove();
+                    
+                    console.log('Base de datos del usuario limpiada completamente');
+                    return true;
+                } catch (error) {
+                    console.error('Error limpiando base de datos:', error);
+                    throw error;
+                }
+            },
+
+            // Forzar reinicialización de productos
+            async forceInitializeProducts() {
+                try {
+                    if (!this.canWriteData()) {
+                        throw new Error('Debes iniciar sesión para reinicializar productos');
+                    }
+                    
+                    console.log('Forzando reinicialización de productos...');
+                    
+                    const userPath = this.getUserPath();
+                    // Limpiar productos existentes del usuario
+                    await database.ref(`${userPath}/productos`).remove();
+                    
+                    // Productos predefinidos por categoría
+                    const VERDURAS_PREDEFINIDAS = [
+                        "achicoria", "apio", "repollo", "zapallo italiano", "acelga cruda", "espinaca cruda", "lechuga", "pepino ensalada", "rabanito", "tomate", "acelga cocida", "alcachofa", "betarraga", "cebolla", "coliflor", "brócoli", "kale", "espárragos", "espinaca cocida", "champiñones", "porotos verdes", "zanahoria", "zapallito italiano cocido", "palmitos", "palta", "papas"
+                    ];
+
+                    const FRUTAS_PREDEFINIDAS = [
+                        "caqui", "manzana", "membrillo", "pera", "durazno", "naranja", "kiwi", "tuna", "higos", "mandarinas", "pepino dulce", "frutillas", "melón", "sandía", "frutos rojos", "arándanos", "plátano", "cerezas", "chirimoya", "damasco", "níspero", "piña", "uva"
+                    ];
+
+                    const PROTEINAS_PREDEFINIDAS = ["carne", "pollo", "cerdo", "pescado", "atún", "huevo"];
+
+                    const LACTEOS_PREDEFINIDOS = ["leche", "yogurt", "quesos", "crema de leche"];
+
+                    const LEGUMBRES_PREDEFINIDAS = ["porotos negros", "lentejas", "arroz", "fideos"];
+
+                    // Función para generar cantidad aleatoria (ahora siempre 0)
+                    const getRandomQuantity = (min, max) => 0;
+                    
+                    // Función para obtener unidad apropiada
+                    const getUnit = (producto) => {
+                        if (producto.includes("leche") || producto.includes("yogurt") || producto.includes("crema")) return "litros";
+                        if (producto.includes("queso")) return "g";
+                        if (producto.includes("carne") || producto.includes("pollo") || producto.includes("cerdo") || producto.includes("pescado")) return "kg";
+                        if (producto.includes("huevo")) return "unidades";
+                        if (producto.includes("arroz") || producto.includes("fideos") || producto.includes("lentejas") || producto.includes("porotos")) return "kg";
+                        if (producto.includes("melón") || producto.includes("sandía")) return "unidades";
+                        if (producto.includes("frutillas") || producto.includes("arándanos") || producto.includes("cerezas")) return "g";
+                        if (producto.includes("papas")) return "kg";
+                        if (producto.includes("palta")) return "unidades";
+                        return "unidades";
+                    };
+
+                    const sampleProducts = [];
+
+                    // Agregar verduras
+                    VERDURAS_PREDEFINIDAS.forEach((verdura, index) => {
+                        sampleProducts.push({
+                            id: `verdura_${index + 1}`,
+                            nombre: verdura.charAt(0).toUpperCase() + verdura.slice(1),
+                            categoria: "Verduras",
+                            cantidad: getRandomQuantity(1, 5),
+                            unidad: getUnit(verdura),
+                            fechaCreacion: new Date().toISOString(),
+                            fechaActualizacion: new Date().toISOString()
+                        });
+                    });
+
+                    // Agregar frutas
+                    FRUTAS_PREDEFINIDAS.forEach((fruta, index) => {
+                        sampleProducts.push({
+                            id: `fruta_${index + 1}`,
+                            nombre: fruta.charAt(0).toUpperCase() + fruta.slice(1),
+                            categoria: "Frutas",
+                            cantidad: getRandomQuantity(1, 8),
+                            unidad: getUnit(fruta),
+                            fechaCreacion: new Date().toISOString(),
+                            fechaActualizacion: new Date().toISOString()
+                        });
+                    });
+
+                    // Agregar proteínas
+                    PROTEINAS_PREDEFINIDAS.forEach((proteina, index) => {
+                        sampleProducts.push({
+                            id: `proteina_${index + 1}`,
+                            nombre: proteina.charAt(0).toUpperCase() + proteina.slice(1),
+                            categoria: "Proteínas",
+                            cantidad: getRandomQuantity(1, 3),
+                            unidad: getUnit(proteina),
+                            fechaCreacion: new Date().toISOString(),
+                            fechaActualizacion: new Date().toISOString()
+                        });
+                    });
+
+                    // Agregar lácteos
+                    LACTEOS_PREDEFINIDOS.forEach((lacteo, index) => {
+                        sampleProducts.push({
+                            id: `lacteo_${index + 1}`,
+                            nombre: lacteo.charAt(0).toUpperCase() + lacteo.slice(1),
+                            categoria: "Lácteos",
+                            cantidad: getRandomQuantity(1, 4),
+                            unidad: getUnit(lacteo),
+                            fechaCreacion: new Date().toISOString(),
+                            fechaActualizacion: new Date().toISOString()
+                        });
+                    });
+
+                    // Agregar legumbres
+                    LEGUMBRES_PREDEFINIDAS.forEach((legumbre, index) => {
+                        sampleProducts.push({
+                            id: `legumbre_${index + 1}`,
+                            nombre: legumbre.charAt(0).toUpperCase() + legumbre.slice(1),
+                            categoria: "Legumbres",
+                            cantidad: getRandomQuantity(1, 2),
+                            unidad: getUnit(legumbre),
+                            fechaCreacion: new Date().toISOString(),
+                            fechaActualizacion: new Date().toISOString()
+                        });
+                    });
+
+                    // Guardar productos de ejemplo
+                    for (const producto of sampleProducts) {
+                        await database.ref(`productos/${producto.id}`).set(producto);
+                    }
+
+                    console.log(`Se inicializaron ${sampleProducts.length} productos`);
+                    return sampleProducts.length;
+                } catch (error) {
+                    console.error('Error forzando reinicialización:', error);
+                    throw error;
+                }
+            },
+
+            // Limpiar y reinicializar todo
+            async cleanAndInitialize() {
+                try {
+                    if (!this.canWriteData()) {
+                        throw new Error('Debes iniciar sesión para limpiar y reinicializar');
+                    }
+                    
+                    console.log('Limpiando y reinicializando base de datos del usuario...');
+                    
+                    const userPath = this.getUserPath();
+                    
+                    // Limpiar solo los datos del usuario actual
+                    await database.ref(userPath).remove();
+                    
+                    // Esperar un momento para asegurar que se limpió
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    // Reinicializar productos
+                    const count = await this.forceInitializeProducts();
+                    
+                    console.log(`Base de datos del usuario limpiada y reinicializada con ${count} productos`);
+                    return count;
+                } catch (error) {
+                    console.error('Error en limpieza y reinicialización:', error);
+                    throw error;
+                }
+            },
+
+            async getProductos() {
+                try {
+                    const userPath = this.getUserPath();
+                    const snapshot = await database.ref(`${userPath}/productos`).once('value');
+                    const productos = [];
+                    snapshot.forEach((childSnapshot) => {
+                        productos.push(childSnapshot.val());
+                    });
+                    return productos;
+                } catch (error) {
+                    console.error('Error obteniendo productos:', error);
+                    return [];
+                }
+            },
+
+            async deleteProducto(id) {
+                try {
+                    if (!this.canWriteData()) {
+                        throw new Error('Debes iniciar sesión para eliminar productos');
+                    }
+                    const userPath = this.getUserPath();
+                    await database.ref(`${userPath}/productos/${id}`).remove();
+                    return true;
+                } catch (error) {
+                    console.error('Error eliminando producto:', error);
+                    throw error;
+                }
+            },
+
+            async clearStock(id) {
+                try {
+                    if (!this.canWriteData()) {
+                        throw new Error('Debes iniciar sesión para limpiar stock');
+                    }
+                    
+                    const userPath = this.getUserPath();
+                    const snapshot = await database.ref(`${userPath}/productos/${id}`).once('value');
+                    const producto = snapshot.val();
+                    if (producto) {
+                        producto.cantidad = 0;
+                        producto.fechaActualizacion = new Date().toISOString();
+                        await database.ref(`${userPath}/productos/${id}`).set(producto);
+                    }
+                    return true;
+                } catch (error) {
+                    console.error('Error limpiando stock:', error);
+                    throw error;
+                }
+            },
+
+            // Lista de compras
+            async addToShoppingList(producto) {
+                try {
+                    if (!this.canWriteData()) {
+                        throw new Error('Debes iniciar sesión para agregar a la lista de compras');
+                    }
+                    
+                    const userPath = this.getUserPath();
+                    const snapshot = await database.ref(`${userPath}/shoppingList`).once('value');
+                    const shoppingList = snapshot.val() || [];
+                    
+                    // Verificar si ya existe en la lista
+                    const existingIndex = shoppingList.findIndex(item => item.id === producto.id);
+                    
+                    if (existingIndex >= 0) {
+                        // Si ya existe, aumentar cantidad
+                        shoppingList[existingIndex].cantidad += 1;
+                    } else {
+                        // Si no existe, agregar nuevo item
+                        shoppingList.push({
+                            id: producto.id,
+                            nombre: producto.nombre,
+                            categoria: producto.categoria,
+                            cantidad: 1,
+                            unidad: producto.unidad,
+                            fechaAgregado: new Date().toISOString()
+                        });
+                    }
+                    
+                    await database.ref(`${userPath}/shoppingList`).set(shoppingList);
+                    return true;
+                } catch (error) {
+                    console.error('Error agregando a lista de compras:', error);
+                    throw error;
+                }
+            },
+
+            async getShoppingList() {
+                try {
+                    const userPath = this.getUserPath();
+                    const snapshot = await database.ref(`${userPath}/shoppingList`).once('value');
+                    return snapshot.val() || [];
+                } catch (error) {
+                    console.error('Error obteniendo lista de compras:', error);
+                    return [];
+                }
+            },
+
+            async removeFromShoppingList(id) {
+                try {
+                    if (!this.canWriteData()) {
+                        throw new Error('Debes iniciar sesión para remover de la lista de compras');
+                    }
+                    
+                    const userPath = this.getUserPath();
+                    const snapshot = await database.ref(`${userPath}/shoppingList`).once('value');
+                    const shoppingList = snapshot.val() || [];
+                    
+                    const updatedList = shoppingList.filter(item => item.id !== id);
+                    await database.ref(`${userPath}/shoppingList`).set(updatedList);
+                    return true;
+                } catch (error) {
+                    console.error('Error removiendo de lista de compras:', error);
+                    throw error;
+                }
+            },
+
+            async clearShoppingList() {
+                try {
+                    if (!this.canWriteData()) {
+                        throw new Error('Debes iniciar sesión para limpiar la lista de compras');
+                    }
+                    
+                    const userPath = this.getUserPath();
+                    await database.ref(`${userPath}/shoppingList`).remove();
+                    return true;
+                } catch (error) {
+                    console.error('Error limpiando lista de compras:', error);
+                    throw error;
+                }
+            },
+
+            async saveShoppingList(shoppingList) {
+                try {
+                    if (!this.canWriteData()) {
+                        throw new Error('Debes iniciar sesión para guardar la lista de compras');
+                    }
+                    
+                    const userPath = this.getUserPath();
+                    await database.ref(`${userPath}/shoppingList`).set(shoppingList);
+                    return true;
+                } catch (error) {
+                    console.error('Error guardando lista de compras:', error);
+                    throw error;
+                }
+            },
+
+            // Estadísticas de base de datos
+            async getDatabaseStats() {
+                try {
+                    const userPath = this.getUserPath();
+                    const [productosSnapshot, configSnapshot, shoppingSnapshot] = await Promise.all([
+                        database.ref(`${userPath}/productos`).once('value'),
+                        database.ref(`${userPath}/config`).once('value'),
+                        database.ref(`${userPath}/shoppingList`).once('value')
+                    ]);
+
+                    const productos = productosSnapshot.val() || {};
+                    const config = configSnapshot.val() || {};
+                    const shoppingList = shoppingSnapshot.val() || [];
+
+                    return {
+                        productos: Object.keys(productos).length,
+                        config: Object.keys(config).length,
+                        shoppingList: shoppingList.length,
+                        totalItems: Object.keys(productos).length + Object.keys(config).length + shoppingList.length
+                    };
+                } catch (error) {
+                    console.error('Error obteniendo estadísticas:', error);
+                    return null;
+                }
+            },
+
+
+
+            // Encriptación
+            encryptText(text, password) {
+                try {
+                    const salt = CryptoJS.lib.WordArray.random(128/8);
+                    const key = CryptoJS.PBKDF2(password, salt, { keySize: 256/32 });
+                    const iv = CryptoJS.lib.WordArray.random(128/8);
+                    const encrypted = CryptoJS.AES.encrypt(text, key, { iv: iv });
+                    return salt.toString() + iv.toString() + encrypted.toString();
+                } catch (error) {
+                    console.error('Error encriptando:', error);
+                    return null;
+                }
+            },
+
+            decryptText(encryptedText, password) {
+                try {
+                    const salt = CryptoJS.enc.Hex.parse(encryptedText.substr(0, 32));
+                    const iv = CryptoJS.enc.Hex.parse(encryptedText.substr(32, 32));
+                    const ciphertext = encryptedText.substr(64);
+                    const key = CryptoJS.PBKDF2(password, salt, { keySize: 256/32 });
+                    const decrypted = CryptoJS.AES.decrypt(ciphertext, key, { iv: iv });
+                    return decrypted.toString(CryptoJS.enc.Utf8);
+                } catch (error) {
+                    console.error('Error desencriptando:', error);
+                    return null;
+                }
+            },
+
+            hashPassword(password) {
+                return CryptoJS.SHA256(password).toString();
+            },
+
+            verifyPassword(password, hash) {
+                return this.hashPassword(password) === hash;
+            },
+
+            validatePassword(password) {
+                const minLength = 8;
+                const hasUpperCase = /[A-Z]/.test(password);
+                const hasLowerCase = /[a-z]/.test(password);
+                const hasNumbers = /\d/.test(password);
+                const hasSymbols = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+                
+                const isValid = password.length >= minLength && hasUpperCase && hasLowerCase && hasNumbers && hasSymbols;
+                
+                return {
+                    isValid,
+                    errors: !isValid ? [
+                        password.length < minLength && 'Al menos 8 caracteres',
+                        !hasUpperCase && 'Al menos una mayúscula',
+                        !hasLowerCase && 'Al menos una minúscula',
+                        !hasNumbers && 'Al menos un número',
+                        !hasSymbols && 'Al menos un símbolo'
+                    ].filter(Boolean) : []
+                };
+            },
+
+            // API Stats
+            getApiStats() {
+                const now = Date.now();
+                const windowMs = 60 * 1000; // 1 minuto
+                const maxRequests = 15;
+                
+                let stats = JSON.parse(localStorage.getItem('api_stats') || '{}');
+                
+                // Limpiar requests antiguos
+                if (stats.requests) {
+                    stats.requests = stats.requests.filter(timestamp => now - timestamp < windowMs);
+                } else {
+                    stats.requests = [];
+                }
+                
+                const requestsInWindow = stats.requests.length;
+                const canMakeRequest = requestsInWindow < maxRequests;
+                
+                return {
+                    requestsInWindow,
+                    maxRequests,
+                    canMakeRequest,
+                    resetTime: now + windowMs
+                };
+            },
+
+            recordApiRequest() {
+                const now = Date.now();
+                let stats = JSON.parse(localStorage.getItem('api_stats') || '{}');
+                
+                if (!stats.requests) stats.requests = [];
+                stats.requests.push(now);
+                
+                localStorage.setItem('api_stats', JSON.stringify(stats));
+            },
+
+            // Generación de recetas mejorada
+            async generarRecetas(apiKey, productos, tipoComida) {
+                if (!this.getApiStats().canMakeRequest) {
+                    throw new Error('Límite de requests alcanzado. Espera 1 minuto.');
+                }
+
+                this.recordApiRequest();
+
+                const ingredientes = productos.map(p => p.nombre).join(', ');
+                
+                let prompt;
+                switch(tipoComida) {
+                    case 'desayuno':
+                        prompt = `Genera 5 recetas de desayuno saludables y nutritivas usando estos ingredientes: ${ingredientes}. 
+                        Incluye opciones como: tostadas, batidos, bowls, omelettes, panqueques saludables, etc.
+                        Responde en formato JSON con esta estructura exacta:
+                        [
+                            {
+                                "nombre": "Nombre del desayuno",
+                                "tipo": "Desayuno",
+                                "tiempo": "15 minutos",
+                                "dificultad": "Fácil",
+                                "ingredientes": ["ingrediente 1", "ingrediente 2"],
+                                "preparacion": ["paso 1", "paso 2"],
+                                "nutricion": "Información nutricional breve",
+                                "consejos": "Consejos útiles"
+                            }
+                        ]`;
+                        break;
+                    case 'almuerzo':
+                        prompt = `Genera 5 recetas de almuerzo completas y balanceadas usando estos ingredientes: ${ingredientes}. 
+                        Incluye platos principales con proteínas, carbohidratos y vegetales. Puedes incluir ensaladas como acompañamiento.
+                        Responde en formato JSON con esta estructura exacta:
+                        [
+                            {
+                                "nombre": "Nombre del plato principal",
+                                "tipo": "Almuerzo",
+                                "tiempo": "30 minutos",
+                                "dificultad": "Media",
+                                "ingredientes": ["ingrediente 1", "ingrediente 2"],
+                                "preparacion": ["paso 1", "paso 2"],
+                                "nutricion": "Información nutricional breve",
+                                "consejos": "Consejos útiles"
+                            }
+                        ]`;
+                        break;
+                    case 'cena':
+                        prompt = `Genera 5 recetas de cena ligeras y saludables usando estos ingredientes: ${ingredientes}. 
+                        Incluye opciones como: sopas, ensaladas, platos ligeros, bowls, etc.
+                        Responde en formato JSON con esta estructura exacta:
+                        [
+                            {
+                                "nombre": "Nombre de la cena",
+                                "tipo": "Cena",
+                                "tiempo": "25 minutos",
+                                "dificultad": "Fácil",
+                                "ingredientes": ["ingrediente 1", "ingrediente 2"],
+                                "preparacion": ["paso 1", "paso 2"],
+                                "nutricion": "Información nutricional breve",
+                                "consejos": "Consejos útiles"
+                            }
+                        ]`;
+                        break;
+                    default:
+                        prompt = `Genera 5 recetas variadas usando estos ingredientes: ${ingredientes}. 
+                        Responde en formato JSON con esta estructura exacta:
+                        [
+                            {
+                                "nombre": "Nombre del plato",
+                                "tipo": "Plato",
+                                "tiempo": "30 minutos",
+                                "dificultad": "Media",
+                                "ingredientes": ["ingrediente 1", "ingrediente 2"],
+                                "preparacion": ["paso 1", "paso 2"],
+                                "nutricion": "Información nutricional breve",
+                                "consejos": "Consejos útiles"
+                            }
+                        ]`;
+                }
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error API: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const text = data.candidates[0].content.parts[0].text;
+                
+                try {
+                    const jsonMatch = text.match(/\[[\s\S]*\]/);
+                    if (jsonMatch) {
+                        return JSON.parse(jsonMatch[0]);
+                    } else {
+                        throw new Error('Respuesta no válida');
+                    }
+                } catch (parseError) {
+                    console.error('Error parseando respuesta:', text);
+                    throw new Error('Error procesando respuesta de IA');
+                }
+            },
+
+
+
+            // Configuración de API con sesión
+            async saveApiKey(apiKey, password) {
+                try {
+                    if (!this.validatePassword(password)) {
+                        throw new Error('La contraseña debe tener al menos 6 caracteres');
+                    }
+                    
+                    // Crear sesión
+                    const sessionId = await this.createSession(password);
+                    
+                    const encryptedApiKey = this.encryptText(apiKey, password);
+                    const passwordHash = this.hashPassword(password);
+                    
+                    await database.ref('config/api_key_encrypted').set(encryptedApiKey);
+                    await database.ref('config/password_hash').set(passwordHash);
+                    await database.ref('config/has_api_key').set(true);
+                    await database.ref('config/active_session_id').set(sessionId);
+                    
+                    return { success: true, sessionId };
+                } catch (error) {
+                    console.error('Error guardando API key:', error);
+                    throw error;
+                }
+            },
+
+            // Gestión de sesión
+            async createSession(password) {
+                try {
+                    const sessionId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+                    const sessionData = {
+                        id: sessionId,
+                        createdAt: new Date().toISOString(),
+                        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 horas
+                        passwordHash: this.hashPassword(password)
+                    };
+                    
+                    await database.ref(`sessions/${sessionId}`).set(sessionData);
+                    return sessionId;
+                } catch (error) {
+                    console.error('Error creando sesión:', error);
+                    throw error;
+                }
+            },
+
+            async validateSession(sessionId, password) {
+                try {
+                    const snapshot = await database.ref(`sessions/${sessionId}`).once('value');
+                    if (!snapshot.exists()) {
+                        return false;
+                    }
+                    
+                    const session = snapshot.val();
+                    const now = new Date();
+                    const expiresAt = new Date(session.expiresAt);
+                    
+                    if (now > expiresAt) {
+                        // Sesión expirada, eliminarla
+                        await database.ref(`sessions/${sessionId}`).remove();
+                        return false;
+                    }
+                    
+                    return this.verifyPassword(password, session.passwordHash);
+                } catch (error) {
+                    console.error('Error validando sesión:', error);
+                    return false;
+                }
+            },
+
+            async clearExpiredSessions() {
+                try {
+                    const snapshot = await database.ref('sessions').once('value');
+                    const now = new Date();
+                    
+                    snapshot.forEach((childSnapshot) => {
+                        const session = childSnapshot.val();
+                        const expiresAt = new Date(session.expiresAt);
+                        
+                        if (now > expiresAt) {
+                            database.ref(`sessions/${childSnapshot.key}`).remove();
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error limpiando sesiones expiradas:', error);
+                }
+            },
+
+            // Exportar/Importar
+            async exportData() {
+                try {
+                    const productos = await this.getProductos();
+                    const config = {};
+                    
+                    // Obtener todas las configuraciones
+                    const configSnapshot = await database.ref('config').once('value');
+                    configSnapshot.forEach((childSnapshot) => {
+                        config[childSnapshot.key] = childSnapshot.val();
+                    });
+
+                    return {
+                        productos,
+                        config,
+                        exportDate: new Date().toISOString(),
+                        version: '2.0.0'
+                    };
+                } catch (error) {
+                    console.error('Error exportando datos:', error);
+                    throw error;
+                }
+            },
+
+            async importData(data) {
+                try {
+                    if (data.productos) {
+                        // Limpiar productos existentes
+                        await database.ref('productos').remove();
+                        
+                        // Importar nuevos productos
+                        for (const producto of data.productos) {
+                            await this.saveProducto(producto);
+                        }
+                    }
+
+                    if (data.config) {
+                        // Importar configuración
+                        for (const [key, value] of Object.entries(data.config)) {
+                            await this.saveConfig(key, value);
+                        }
+                    }
+
+                    return true;
+                } catch (error) {
+                    console.error('Error importando datos:', error);
+                    throw error;
+                }
+            }
+        };
+    </script>
+
+    <!-- App -->
+    <script type="text/babel" src="app.js"></script>
+</body>
 </html> 
